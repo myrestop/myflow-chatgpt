@@ -1,32 +1,18 @@
-id: xxx
-name: xxx
-names:
-  ZH_CN: 模版仓库
-  ZH_TW: 模版倉庫
-entry: ./xxx.jar
+id: top.myrest.myflow.chatgpt
+name: ChatGPT
+entry: ./myflow-chatgpt.jar
 version: 1.0.0
-logo: ./logos/xxx.png
+logo: ./logos/chatgpt.png
 compatible-version:
   since-build: 0
   until-build: 2147483647
 description-filename: description.md
 owner:
-  name: xxx
-  email: xxx@xxx.xxx
-  homepage: https://xxx.xxx/xxx
+  name: myrest
+  email: myflow@myrest.top
+  homepage: https://myrest.top/myflow
 categories:
-  - THEME
   - PRODUCTIVITY
-  - LANGUAGE
-  - DEVELOP_TOOL
-  - MEDIA
-  - SECURITY
-  - SEARCHING
-  - GAME
-  - NEWS
-  - ENTERTAINMENT
-  - ACTION_WINDOW
-  - PLUGIN_SUPPORT
 platforms:
   - WINDOWS
   - MACOS
@@ -35,10 +21,9 @@ languages:
   - EN_US
   - ZH_CN
   - ZH_TW
-language-bundle-name: com.example.kotlin.LanguageBundle
 actions:
   - keywords:
-      - xxx
-    logo: ./logos/xxx.png
-    handler-class-name: xxx
-    description-bundle-id: xxx
+      - '/'
+    logo: ./logos/chatgpt.png
+    handler-class-name: top.myrest.myflow.chatgpt.ChatgptActionHandler
+    name-bundle-id: OpenAI Chatgpt
