@@ -21,7 +21,7 @@ val myflowVersion = "1.0.0"
 dependencies {
     compileOnly(compose.desktop.currentOs)
     compileOnly("top.myrest:myflow-kit:$myflowVersion")
-    compileOnly("top.myrest:myflow-baseimpl:$myflowVersion")
+    testImplementation("top.myrest:myflow-baseimpl:$myflowVersion")
 }
 
 tasks.withType<KotlinCompile> {
