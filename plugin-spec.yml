@@ -25,5 +25,5 @@ actions:
   - keywords:
       - '/'
     logo: ./logos/chatgpt.png
-    handler: top.myrest.myflow.chatgpt.ChatgptActionHandler
+    handler: top.myrest.myflow.chatgpt.ChatGptActionHandler
     name-bundle-id: OpenAI ChatGPT

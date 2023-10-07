@@ -19,6 +19,9 @@ repositories {
 val myflowVersion = "1.0.0"
 
 dependencies {
+    implementation("com.unfbx:chatgpt-java:1.1.0") {
+        exclude(group = "cn.hutool", module = "hutool-all")
+    }
     compileOnly(compose.desktop.currentOs)
     compileOnly("top.myrest:myflow-kit:$myflowVersion")
     testImplementation("top.myrest:myflow-baseimpl:$myflowVersion")
