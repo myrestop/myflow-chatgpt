@@ -6,7 +6,8 @@ import top.myrest.myflow.dev.DevProps
 
 fun main() {
     enableDevEnv()
-    DevProps.disableNativeListener = false
+    DevProps.disableNativeListener = true
     FlowApp().configApp()
+    AppInfo.runtimeProps.pinActionWindowOnStartupShow = true
     App(AppInfo.APP_NAME + "ChatGPT")
 }

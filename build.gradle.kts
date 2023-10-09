@@ -17,11 +17,16 @@ repositories {
 }
 
 val myflowVersion = "1.0.0"
+val okhttpVersion = "4.9.0"
 
 dependencies {
     implementation("com.unfbx:chatgpt-java:1.1.0") {
         exclude(group = "cn.hutool", module = "hutool-all")
+        exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")
+        exclude(group = "com.squareup.okhttp3", module = "logging-interceptor")
     }
+    implementation("com.squareup.okhttp3:okhttp-sse:$okhttpVersion")
+    implementation("com.squareup.okhttp3:logging-interceptor:$okhttpVersion")
     compileOnly(compose.desktop.currentOs)
     compileOnly("top.myrest:myflow-kit:$myflowVersion")
     testImplementation("top.myrest:myflow-baseimpl:$myflowVersion")
