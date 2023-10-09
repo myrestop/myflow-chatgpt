@@ -16,8 +16,8 @@ import top.myrest.myflow.util.singleList
 
 class ChatGptActionHandler : ActionFocusedKeywordHandler {
 
-    override fun getCustomizeSettingContent(): SettingsContent? {
-        return super.getCustomizeSettingContent()
+    override fun getCustomizeSettingContent(): SettingsContent {
+        return ChatGptSettingsContent()
     }
 
     override fun enterFocusMode(pin: ActionKeywordPin): ActionFocusedSession {

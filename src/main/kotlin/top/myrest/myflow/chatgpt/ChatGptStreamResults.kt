@@ -141,7 +141,7 @@ internal object ChatGptStreamResults {
                             }
                         }
                         delay(100)
-                        val chatGptMessage = Message.builder().role(Message.Role.ASSISTANT).content(text).build()
+                        val chatGptMessage = Message.builder().role(Message.Role.ASSISTANT).content(textBuffer.toString()).build()
                         renderMessageResult(session, chatGptMessage, userMessage)
                     }
                     DisposableEffect(Unit) {
