@@ -1,18 +1,19 @@
 package top.myrest.myflow.chatgpt
 
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.max
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.component.Composes
+import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.dev.DevProps
 import top.myrest.myflow.util.Jackson.readByJson
@@ -62,7 +64,7 @@ internal object ChatGptStreamResults {
 
         return customContentResult(
             actionId = "",
-            contentHeight = 600,
+            contentHeight = -1,
             content = {
                 listener.ChatGptStreamResult(session, message)
             },
@@ -86,6 +88,10 @@ internal object ChatGptStreamResults {
         override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
             if (DevProps.isDev) {
                 log.info("get openai data: {}", data);
+            }
+            if (closed.get()) {
+                eventSource.cancel()
+                return
             }
             if ("[DONE]" == data) {
                 closed.set(true)
@@ -124,13 +130,9 @@ internal object ChatGptStreamResults {
                     modifier = Modifier.width(40.dp),
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                SelectionContainer(modifier = Modifier.fillMaxWidth()) {
-                    var text by remember { mutableStateOf(userMessage.content) }
-                    var atUser by remember { mutableStateOf(true) }
-                    var cHeight by remember { mutableStateOf(0) }
-                    var uHeight by remember { mutableStateOf(0) }
+                SelectionContainer {
+                    var text by remember { mutableStateOf("") }
                     LaunchedEffect(Unit) {
-                        atUser = false
                         while (!closed.get()) {
                             delay(50)
                             if (hasNewText.get()) {
@@ -140,57 +142,68 @@ internal object ChatGptStreamResults {
                         }
                         delay(100)
                         val chatGptMessage = Message.builder().role(Message.Role.ASSISTANT).content(text).build()
-                        renderMessageResult(session, chatGptMessage, cHeight, userMessage, uHeight)
+                        renderMessageResult(session, chatGptMessage, userMessage)
+                    }
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            closed.set(true)
+                        }
                     }
                     Text(
                         text = text,
                         color = MaterialTheme.colors.onPrimary,
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         overflow = TextOverflow.Visible,
-                        onTextLayout = {
-                            val height = it.lineCount * 20
-                            if (atUser) {
-                                uHeight = height
-                            } else {
-                                cHeight = height
-                            }
-                        },
                     )
                 }
             }
         }
 
-        private fun renderMessageResult(session: ChatGptFocusedSession, chatGptMessage: Message, cHeight: Int, userMessage: Message, uHeight: Int) {
-            val list = mutableListOf(userMessage.toResult(uHeight), chatGptMessage.toResult(cHeight))
+        private fun renderMessageResult(session: ChatGptFocusedSession, chatGptMessage: Message, userMessage: Message) {
+            val list = mutableListOf(userMessage.toResult(), chatGptMessage.toResult())
             list.addAll(session.results)
             session.results = list
             Composes.actionWindowProvider?.updateActionResultList(session.pin, session.results)
         }
 
-        private fun Message.toResult(height: Int): ActionResult = customContentResult(
+        private fun Message.toResult(): ActionResult = customContentResult(
             actionId = "",
-            contentHeight = max(height, 60),
             result = this,
+            contentHeight = -1,
             content = {
                 val isUser = role == Message.Role.USER.getName()
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalAlignment = if (isUser) Alignment.CenterVertically else Alignment.Top,
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    val minSize = 40
                     Image(
                         painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
                         contentDescription = AppConsts.LOGO,
-                        modifier = Modifier.width(40.dp).height(40.dp),
+                        modifier = Modifier.width(minSize.dp).height(minSize.dp),
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    SelectionContainer(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = content,
-                            color = if (isUser) MaterialTheme.colors.onSecondary else MaterialTheme.colors.onPrimary,
-                            fontSize = MaterialTheme.typography.h6.fontSize,
-                            overflow = TextOverflow.Visible,
-                            fontWeight = if (isUser) FontWeight.Bold else null,
-                        )
+                    SelectionContainer {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().heightIn(min = minSize.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (isUser) {
+                                Text(
+                                    text = content,
+                                    color = MaterialTheme.colors.onSecondary,
+                                    fontSize = MaterialTheme.typography.h6.fontSize,
+                                    overflow = TextOverflow.Visible,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            } else {
+                                MaterialTheme(
+                                    colors = MaterialTheme.colors,
+                                    typography = MaterialTheme.typography.copy(
+                                        body1 = MaterialTheme.typography.h6,
+                                    ),
+                                ) {
+                                    MyMarkdownText(content)
+                                }
+                            }
+                        }
                     }
                 }
             },

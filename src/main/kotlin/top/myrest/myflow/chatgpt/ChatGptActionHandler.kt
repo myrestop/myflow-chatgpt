@@ -34,7 +34,7 @@ class ChatGptActionHandler : ActionFocusedKeywordHandler {
 
         var apiKey: String = AppInfo.runtimeProps.getParam(API_KEY, "")
 
-        var temperature: Double = AppInfo.runtimeProps.getParam(TEMPERATURE_KEY, 0.7)
+        var temperature: Double = AppInfo.runtimeProps.getParam(TEMPERATURE_KEY, 0.6)
 
         var model: String = AppInfo.runtimeProps.getParam(MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
     }
@@ -46,7 +46,9 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
-    override fun exitFocusMode() {}
+    override fun exitFocusMode() {
+
+    }
 
     override fun getLabel(): String {
         if (ChatGptActionHandler.apiKey.isBlank()) {
