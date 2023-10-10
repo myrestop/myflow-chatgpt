@@ -8,6 +8,10 @@ import top.myrest.myflow.db.AutoIncrementDoc
 import top.myrest.myflow.db.BaseRepo
 import top.myrest.myflow.db.MyDb
 
+internal enum class ContentType {
+    TEXT, IMAGES, FILE
+}
+
 @InheritIndices
 @Indices(
     value = [
@@ -19,13 +23,15 @@ internal data class ChatHistoryDoc(
     val session: String,
     val role: String,
     val content: String,
-    val at: Long,
+    val value: String = "",
+    val type: ContentType = ContentType.TEXT,
+    val at: Long = System.currentTimeMillis(),
 ) : AutoIncrementDoc()
 
 internal object ChatHistoryRepo : BaseRepo() {
 
     fun addChat(userDoc: ChatHistoryDoc, chatDoc: ChatHistoryDoc) {
-        if (userDoc.id != null || chatDoc.id != null) {
+        if (userDoc.id != null || chatDoc.id != null || userDoc.session.isBlank() || chatDoc.session.isBlank()) {
             return
         }
         MyDb.insertDoc(chatDoc)

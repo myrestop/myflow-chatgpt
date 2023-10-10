@@ -1,11 +1,14 @@
 package top.myrest.myflow.chatgpt
 
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
+import cn.hutool.core.io.FileUtil
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionFocusedKeywordHandler
 import top.myrest.myflow.action.ActionFocusedSession
 import top.myrest.myflow.action.ActionResult
+import top.myrest.myflow.action.ActionResultCallback
 import top.myrest.myflow.action.plain
 import top.myrest.myflow.action.singleCallback
 import top.myrest.myflow.component.ActionKeywordPin
@@ -43,15 +46,15 @@ class ChatGptActionHandler : ActionFocusedKeywordHandler {
 
 internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSession(pin) {
 
-    internal var results = emptyList<ActionResult>()
+    internal val results = AtomicReference(emptyList<ActionResult>())
 
     private val flag = AtomicReference("")
 
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
-    override fun exitFocusMode() {
+    override fun exitFocusMode() {}
 
-    }
+    override fun getWorkDir(): File = FileUtil.getUserHomeDir()
 
     override fun getLabel(): String {
         if (ChatGptActionHandler.apiKey.isBlank()) {
@@ -62,37 +65,64 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     override fun queryAction(action: String): List<ActionResult> {
         if (action.isBlank()) {
-            return results
+            return results.get()
         }
         if (ChatGptActionHandler.apiKey.isBlank()) {
             return setApiKeyResult(action).singleList()
         }
 
-        return messageResult(action)
+        return messageResults(action)
     }
 
-    private fun messageResult(action: String): List<ActionResult> {
+    private fun messageResults(action: String): List<ActionResult> {
         val defaultResult = ActionResult(
             actionId = "",
             title = listOf(action.plain),
             result = action,
-            callbacks = singleCallback(actionWindowBehavior = ActionWindowBehavior.NOTHING),
+            callbacks = singleCallback(
+                showNotify = false,
+                actionWindowBehavior = ActionWindowBehavior.NOTHING,
+            ),
         )
-        return listOf(
+
+        val list = mutableListOf<ActionResult>()
+        val (offset, files) = getSuggestFiles(action)
+        files.forEach {
+            list.add(
+                it.mapFile(offset).copy(
+                    callbacks = singleCallback(
+                        showNotify = false,
+                        actionWindowBehavior = ActionWindowBehavior.NOTHING,
+                    ) { f ->
+                        if (f is File) {
+                            Composes.actionWindowProvider?.setAction(pin, it.canonicalPath, true)
+                        }
+                    },
+                )
+            )
+        }
+
+        val modelList = mutableListOf(ChatGptActionHandler.model)
+        modelList.addAll(ChatCompletion.Model.values().map { it.getName() })
+        list.add(
             defaultResult.copy(
                 subtitle = "ChatGPT",
-                callbacks = defaultResult.callbacks.map { callback ->
-                    callback.copy(
+                callbacks = modelList.distinct().map { model ->
+                    ActionResultCallback(
+                        label = model,
+                        showNotify = false,
+                        actionWindowBehavior = ActionWindowBehavior.NOTHING,
                         actionCallback = {
                             if (it is String) {
                                 assignFlag("chat")
-                                val list = ChatGptStreamResults.getStreamChatResult(this, it).singleList()
-                                updateResults(list)
+                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getStreamChatResult(this, it, model).singleList())
                             }
                         },
                     )
                 },
-            ),
+            )
+        )
+        list.add(
             defaultResult.copy(
                 subtitle = AppInfo.currLanguageBundle.shared.generate + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image,
                 callbacks = defaultResult.callbacks.map { callback ->
@@ -100,19 +130,84 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                         actionCallback = {
                             if (it is String) {
                                 assignFlag("image")
-                                updateResults(emptyList())
+                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getGenerateImageResult(this, it))
                             }
                         },
                     )
                 },
-            ),
+            )
         )
+
+        var userFile: File? = try {
+            val file = File(action)
+            if (file.exists()) file else null
+        } catch (e: Exception) {
+            null
+        }
+        var file: File? = null
+        var hasImage = false
+        for (result in results.get()) {
+            val finalResult = result.result
+            if (finalResult is ChatHistoryDoc) {
+                if (finalResult.type == ContentType.FILE) {
+                    hasImage = true
+                    file = File(finalResult.value)
+                    break
+                } else if (finalResult.type == ContentType.IMAGES) {
+                    hasImage = true
+                    break
+                }
+            }
+        }
+
+        if (hasImage) {
+            list.add(
+                defaultResult.copy(
+                    title = listOf((file?.canonicalPath ?: action).plain),
+                    subtitle = AppInfo.currLanguageBundle.shared.modify + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image,
+                    callbacks = defaultResult.callbacks.map { callback ->
+                        callback.copy(
+                            actionCallback = {
+                                if (it is String) {
+                                    assignFlag("image")
+                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getModifyImageResult(this, it))
+                                }
+                            },
+                        )
+                    },
+                )
+            )
+        }
+
+        userFile = userFile ?: file
+        if (userFile != null && userFile.isFile) {
+            list.add(
+                defaultResult.copy(
+                    title = listOf(userFile.canonicalPath.plain),
+                    result = userFile,
+                    subtitle = "OpenAI" + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.variation,
+                    callbacks = defaultResult.callbacks.map { callback ->
+                        callback.copy(
+                            actionCallback = {
+                                if (it is File) {
+                                    assignFlag("image")
+                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getVariationImageResult(this, it))
+                                }
+                            },
+                        )
+                    },
+                )
+            )
+        }
+
+        return list
     }
 
     /**
      * 标记是否重新开启会话
      */
     private fun assignFlag(flag: String) {
+        Composes.actionWindowProvider?.setAction(pin, "", false)
         if (flag.isEmpty()) {
             return
         }
@@ -125,13 +220,8 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
         if (preFlag != flag) {
             // 开启新会话
-            results = emptyList()
+            results.set(emptyList())
         }
-    }
-
-    private fun updateResults(list: List<ActionResult>) {
-        Composes.actionWindowProvider?.setAction(pin, "", false)
-        Composes.actionWindowProvider?.updateActionResultList(pin, list)
     }
 
     private fun setApiKeyResult(action: String) = ActionResult(
