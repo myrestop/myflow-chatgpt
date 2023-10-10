@@ -2,7 +2,9 @@ package top.myrest.myflow.chatgpt
 
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,9 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +58,7 @@ import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.action.plain
 import top.myrest.myflow.component.Composes
+import top.myrest.myflow.component.MyHoverable
 import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.dev.DevProps
@@ -180,6 +187,7 @@ internal object ChatGptStreamResults {
         return Message.builder().role(role).content(content).build()
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     private fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
         actionId = "",
         result = this,
@@ -222,10 +230,26 @@ internal object ChatGptStreamResults {
 
                             ContentType.IMAGES -> {
                                 Column {
-                                    value.readByJsonArray<String>().forEach {
-                                        val painter = Composes.getPainter(ImgUtil.toImage(it))
+                                    value.readByJsonArray<String>().forEach { it ->
+                                        val img = ImgUtil.toImage(it)
+                                        val painter = Composes.getPainter(img)
                                         if (painter != null) {
-                                            Image(painter = painter, contentDescription = "image", contentScale = ContentScale.None)
+                                            Box(contentAlignment = Alignment.BottomEnd) {
+                                                Image(painter = painter, contentDescription = "image", contentScale = ContentScale.None)
+                                                MyHoverable(padding = 3.dp) {
+                                                    Icon(
+                                                        imageVector = Icons.Outlined.Download,
+                                                        contentDescription = "Download",
+                                                        tint = MaterialTheme.colors.onSecondary,
+                                                        modifier = Modifier.height(16.dp).width(16.dp).onClick {
+                                                            val file = AppInfo.actionWindow.showFileChooser(fileToSave = true).firstOrNull()
+                                                            if (file != null) {
+                                                                ImgUtil.write(img, file)
+                                                            }
+                                                        },
+                                                    )
+                                                }
+                                            }
                                             Spacer(modifier = Modifier.height(12.dp))
                                         }
                                     }

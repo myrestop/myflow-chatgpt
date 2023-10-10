@@ -160,24 +160,24 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
             }
         }
 
-        if (hasImage) {
-            list.add(
-                defaultResult.copy(
-                    title = listOf((file?.canonicalPath ?: action).plain),
-                    subtitle = AppInfo.currLanguageBundle.shared.modify + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image,
-                    callbacks = defaultResult.callbacks.map { callback ->
-                        callback.copy(
-                            actionCallback = {
-                                if (it is String) {
-                                    assignFlag("image")
-                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getModifyImageResult(this, it))
-                                }
-                            },
-                        )
-                    },
-                )
-            )
-        }
+//        if (hasImage) {
+//            list.add(
+//                defaultResult.copy(
+//                    title = listOf((file?.canonicalPath ?: action).plain),
+//                    subtitle = AppInfo.currLanguageBundle.shared.modify + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image,
+//                    callbacks = defaultResult.callbacks.map { callback ->
+//                        callback.copy(
+//                            actionCallback = {
+//                                if (it is String) {
+//                                    assignFlag("image")
+//                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getModifyImageResult(this, it))
+//                                }
+//                            },
+//                        )
+//                    },
+//                )
+//            )
+//        }
 
         userFile = userFile ?: file
         if (userFile != null && userFile.isFile) {
