@@ -1,5 +1,6 @@
 package top.myrest.myflow.chatgpt
 
+import java.util.concurrent.atomic.AtomicReference
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionFocusedKeywordHandler
@@ -44,6 +45,8 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     internal var results = emptyList<ActionResult>()
 
+    private val flag = AtomicReference("")
+
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
     override fun exitFocusMode() {
@@ -65,27 +68,70 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
             return setApiKeyResult(action).singleList()
         }
 
-        val list = mutableListOf(messageResult(action))
-        list.addAll(results)
-        return list
+        return messageResult(action)
     }
 
-    private fun messageResult(action: String): ActionResult {
-        return ActionResult(
+    private fun messageResult(action: String): List<ActionResult> {
+        val defaultResult = ActionResult(
             actionId = "",
             title = listOf(action.plain),
-            subtitle = sendMessageTip,
             result = action,
-            callbacks = singleCallback(
-                actionWindowBehavior = ActionWindowBehavior.NOTHING,
-            ) {
-                if (it is String) {
-                    Composes.actionWindowProvider?.setAction(pin, "", false)
-                    val list = ChatGptStreamResults.getResult(this, it).singleList()
-                    Composes.actionWindowProvider?.updateActionResultList(pin, list)
-                }
-            },
+            callbacks = singleCallback(actionWindowBehavior = ActionWindowBehavior.NOTHING),
         )
+        return listOf(
+            defaultResult.copy(
+                subtitle = "ChatGPT",
+                callbacks = defaultResult.callbacks.map { callback ->
+                    callback.copy(
+                        actionCallback = {
+                            if (it is String) {
+                                assignFlag("chat")
+                                val list = ChatGptStreamResults.getStreamChatResult(this, it).singleList()
+                                updateResults(list)
+                            }
+                        },
+                    )
+                },
+            ),
+            defaultResult.copy(
+                subtitle = AppInfo.currLanguageBundle.shared.generate + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.image,
+                callbacks = defaultResult.callbacks.map { callback ->
+                    callback.copy(
+                        actionCallback = {
+                            if (it is String) {
+                                assignFlag("image")
+                                updateResults(emptyList())
+                            }
+                        },
+                    )
+                },
+            ),
+        )
+    }
+
+    /**
+     * 标记是否重新开启会话
+     */
+    private fun assignFlag(flag: String) {
+        if (flag.isEmpty()) {
+            return
+        }
+
+        val preFlag = this.flag.get()
+        this.flag.set(flag)
+        if (preFlag.isEmpty()) {
+            return
+        }
+
+        if (preFlag != flag) {
+            // 开启新会话
+            results = emptyList()
+        }
+    }
+
+    private fun updateResults(list: List<ActionResult>) {
+        Composes.actionWindowProvider?.setAction(pin, "", false)
+        Composes.actionWindowProvider?.updateActionResultList(pin, list)
     }
 
     private fun setApiKeyResult(action: String) = ActionResult(

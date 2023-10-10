@@ -25,6 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cn.hutool.core.util.RandomUtil
+import com.unfbx.chatgpt.OpenAiClient
 import com.unfbx.chatgpt.OpenAiStreamClient
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse
@@ -45,30 +47,51 @@ import top.myrest.myflow.util.Jackson.readByJson
 
 internal object ChatGptStreamResults {
 
-    private val client = OpenAiStreamClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
+    private val client = OpenAiClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
 
-    fun getResult(session: ChatGptFocusedSession, action: String): ActionResult {
+    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
+
+    fun genImage() {
+
+    }
+
+    fun getStreamChatResult(session: ChatGptFocusedSession, action: String): ActionResult {
         val messages = mutableListOf<Message>()
         session.results.forEach {
             val result = it.result
-            if (result is Message) {
-                messages.add(result)
+            if (result is ChatHistoryDoc) {
+                messages.add(result.toMessage())
             }
         }
 
-        val message = Message.builder().role(Message.Role.USER).content(action).build()
-        messages.add(message)
+        val doc = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), action, System.currentTimeMillis())
+        messages.add(doc.toMessage())
         val completion = ChatCompletion.builder().temperature(ChatGptActionHandler.temperature).model(ChatGptActionHandler.model).messages(messages).build()
         val listener = OpenAiStreamEventListener()
-        client.streamChatCompletion(completion, listener)
+        streamClient.streamChatCompletion(completion, listener)
 
         return customContentResult(
             actionId = "",
             contentHeight = -1,
             content = {
-                listener.ChatGptStreamResult(session, message)
+                listener.ChatGptStreamResult(session, doc)
             },
         )
+    }
+
+    private fun resolveSession(session: ChatGptFocusedSession): String {
+        for (result in session.results) {
+            val finalResult = result.result
+            if (finalResult is ChatHistoryDoc && finalResult.session.isNotBlank()) {
+                return finalResult.session
+            }
+        }
+        val length = RandomUtil.randomInt(5, 10)
+        return RandomUtil.randomString(length)
+    }
+
+    private fun ChatHistoryDoc.toMessage(): Message {
+        return Message.builder().role(role).content(content).build()
     }
 
     private class OpenAiStreamEventListener : ConsoleEventSourceListener() {
@@ -122,7 +145,7 @@ internal object ChatGptStreamResults {
 
         @Composable
         @Suppress("FunctionName")
-        fun ChatGptStreamResult(session: ChatGptFocusedSession, userMessage: Message) {
+        fun ChatGptStreamResult(session: ChatGptFocusedSession, doc: ChatHistoryDoc) {
             Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) {
                 Image(
                     painter = Composes.getPainter(Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
@@ -140,9 +163,8 @@ internal object ChatGptStreamResults {
                                 hasNewText.set(false)
                             }
                         }
-                        delay(100)
-                        val chatGptMessage = Message.builder().role(Message.Role.ASSISTANT).content(textBuffer.toString()).build()
-                        renderMessageResult(session, chatGptMessage, userMessage)
+                        val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), textBuffer.toString(), System.currentTimeMillis())
+                        renderSessionResult(session, doc, chatDoc)
                     }
                     DisposableEffect(Unit) {
                         onDispose {
@@ -159,14 +181,15 @@ internal object ChatGptStreamResults {
             }
         }
 
-        private fun renderMessageResult(session: ChatGptFocusedSession, chatGptMessage: Message, userMessage: Message) {
-            val list = mutableListOf(userMessage.toResult(), chatGptMessage.toResult())
+        private fun renderSessionResult(session: ChatGptFocusedSession, userDoc: ChatHistoryDoc, chatDoc: ChatHistoryDoc) {
+            ChatHistoryRepo.addChat(userDoc, chatDoc)
+            val list = mutableListOf(userDoc.toResult(), chatDoc.toResult())
             list.addAll(session.results)
             session.results = list
             Composes.actionWindowProvider?.updateActionResultList(session.pin, session.results)
         }
 
-        private fun Message.toResult(): ActionResult = customContentResult(
+        private fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
             actionId = "",
             result = this,
             contentHeight = -1,
