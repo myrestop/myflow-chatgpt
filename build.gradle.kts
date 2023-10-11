@@ -38,12 +38,23 @@ tasks.withType<KotlinCompile> {
 
 tasks.jar {
     archiveFileName.set(entry)
-    from(
-        configurations.runtimeClasspath.get().allDependencies.flatMap { dependency ->
-            configurations.runtimeClasspath.get().files(dependency).map { file ->
-                if (file.isDirectory) file else zipTree(file)
+    val exists = mutableSetOf<String>()
+    val files = mutableListOf<Any>()
+    configurations.runtimeClasspath.get().allDependencies.forEach { dependency ->
+        configurations.runtimeClasspath.get().files(dependency).forEach { file ->
+            if (exists.add(file.name)) {
+                println(file.name)
+                files.add(if (file.isDirectory) file else zipTree(file))
             }
-        },
+        }
+    }
+    from(files)
+
+    exclude(
+        "module-info.class",
+        "META-INF/NOTICE",
+        "META-INF/LICENSE",
+        "META-INF/versions/9/module-info.class",
     )
 }
 

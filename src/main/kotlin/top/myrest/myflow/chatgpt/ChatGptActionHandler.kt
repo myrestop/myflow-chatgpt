@@ -42,7 +42,7 @@ class ChatGptActionHandler : ActionFocusedKeywordHandler() {
 
         var apiKey: String = AppInfo.runtimeProps.getParam(API_KEY, "")
 
-        var temperature: Double = AppInfo.runtimeProps.getParam(TEMPERATURE_KEY, 0.6)
+        var temperature: Float = AppInfo.runtimeProps.getParam(TEMPERATURE_KEY, 0.6f)
 
         var model: String = AppInfo.runtimeProps.getParam(MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
     }

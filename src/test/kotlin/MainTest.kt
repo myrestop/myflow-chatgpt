@@ -43,7 +43,7 @@ fun main() {
     Actions.register("settings", AppSettingsActionHandler())
 
     AppStartedEvent::class.java.addSimpleListener {
-        Actions.setFocusedData(Composes.mainPin, Constants.PLUGIN_ID, AppConsts.ANY_KEYWORD, ChatGptActionHandler())
+//        Actions.setFocusedData(Composes.mainPin, Constants.PLUGIN_ID, AppConsts.ANY_KEYWORD, ChatGptActionHandler())
     }
     App(AppInfo.APP_NAME + name)
 }

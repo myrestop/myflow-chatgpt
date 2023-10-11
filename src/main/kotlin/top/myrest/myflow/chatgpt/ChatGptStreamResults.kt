@@ -74,7 +74,7 @@ internal object ChatGptStreamResults {
 
     private const val MIN_SIZE = 40
 
-    private val client = OpenAiClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
+    val client = OpenAiClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
 
     private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
 
@@ -160,7 +160,7 @@ internal object ChatGptStreamResults {
 
         val doc = action.asUserTextDoc(session)
         messages.add(doc.toMessage())
-        val completion = ChatCompletion.builder().temperature(ChatGptActionHandler.temperature).model(model).messages(messages).build()
+        val completion = ChatCompletion.builder().temperature(ChatGptActionHandler.temperature.toDouble()).model(model).messages(messages).build()
         val listener = OpenAiStreamEventListener()
         streamClient.streamChatCompletion(completion, listener)
 
