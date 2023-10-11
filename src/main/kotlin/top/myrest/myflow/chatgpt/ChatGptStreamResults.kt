@@ -1,9 +1,11 @@
 package top.myrest.myflow.chatgpt
 
 import java.io.File
+import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,12 +30,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cn.hutool.core.date.DateUtil
 import cn.hutool.core.exceptions.ExceptionUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
@@ -122,6 +128,7 @@ internal object ChatGptStreamResults {
         )
     }
 
+    @Suppress("CAST_NEVER_SUCCEEDS")
     private fun getImageResult(session: ChatGptFocusedSession, action: String, getImages: (ChatGptFocusedSession, String) -> List<Item>): List<ActionResult> {
         AsyncTasks.execute {
             val userDoc = action.asUserTextDoc(session)
@@ -137,6 +144,7 @@ internal object ChatGptStreamResults {
             if (imageDoc.type == ContentType.IMAGES) {
                 ChatHistoryRepo.addChat(userDoc, imageDoc)
                 session.results.set(list)
+                session.chatHistoryWindow?.updateChatList?.invoke(session.results.get().filter { it.result is ChatHistoryDoc }.map { it.result as ChatHistoryDoc })
             }
             Composes.actionWindowProvider?.updateActionResultList(session.pin, list)
         }
@@ -187,7 +195,7 @@ internal object ChatGptStreamResults {
         return Message.builder().role(role).content(content).build()
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
         actionId = "",
         result = this,
@@ -195,17 +203,29 @@ internal object ChatGptStreamResults {
         content = {
             val isUser = role == Message.Role.USER.getName()
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                var showTime by remember { mutableStateOf(false) }
                 Image(
                     painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
                     contentDescription = AppConsts.LOGO,
-                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp),
+                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp).onPointerEvent(eventType = PointerEventType.Enter) {
+                        showTime = true
+                    }.onPointerEvent(eventType = PointerEventType.Exit) {
+                        showTime = false
+                    },
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 SelectionContainer {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth().heightIn(min = MIN_SIZE.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.Center,
                     ) {
+                        if (showTime) {
+                            Text(
+                                text = DateUtil.formatDateTime(Date(at)),
+                                color = MaterialTheme.colors.onPrimary.copy(0.6f),
+                                fontSize = MaterialTheme.typography.subtitle2.fontSize,
+                            )
+                        }
                         when (type) {
                             ContentType.TEXT -> {
                                 if (isUser) {
@@ -360,6 +380,7 @@ internal object ChatGptStreamResults {
             if (!failure.get()) {
                 ChatHistoryRepo.addChat(userDoc, chatDoc)
                 session.results.set(list)
+                session.chatHistoryWindow?.updateChatList?.invoke(session.results.get().filter { it.result is ChatHistoryDoc }.map { it.result as ChatHistoryDoc })
             }
             Composes.actionWindowProvider?.updateActionResultList(session.pin, list)
         }

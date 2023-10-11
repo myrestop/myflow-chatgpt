@@ -56,7 +56,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
-    private var chatHistoryWindow: ChatHistoryWindow? = ChatHistoryWindow(this, pin)
+    var chatHistoryWindow: ChatHistoryWindow? = ChatHistoryWindow(this, pin)
 
     private val inactive = AtomicBoolean(true)
 

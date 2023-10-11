@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -121,9 +123,22 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
     }
 }
 
-internal data class ChatHistoryData(val firstUser: ChatHistoryDoc, val list: List<ChatHistoryDoc>)
+internal data class ChatHistoryData(val firstUser: ChatHistoryDoc, val list: List<ChatHistoryDoc>) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as ChatHistoryData
+        return firstUser == other.firstUser
+    }
 
-internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(CornerType.LEFT_SIDE, 200, 120) {
+    override fun hashCode(): Int {
+        return firstUser.hashCode()
+    }
+}
+
+internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(CornerType.LEFT_SIDE, 200, null) {
+
+    lateinit var updateChatList: (List<ChatHistoryDoc>) -> Unit
 
     private val pinChangedListener = object : BaseEventListener<ActionPinKeywordChangedEvent>(ActionPinKeywordChangedEvent::class.java) {
         override fun onEvent(detail: EventExtraDetail, event: ActionPinKeywordChangedEvent) {
@@ -153,16 +168,38 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
     @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     private fun ChatHistoryViewer(value: String) {
         val list = remember { mutableStateListOf<ChatHistoryData>() }
+        LaunchedEffect(Unit) {
+            updateChatList = method@{
+                val session = it.firstOrNull()?.session ?: return@method
+                if (session.isBlank()) {
+                    return@method
+                }
+
+                val data = ChatHistoryData(it.first(), it)
+                val idx = list.indexOfFirst { e -> e.firstUser.session == session }
+                if (idx < 0) {
+                    list.add(0, data)
+                } else {
+                    list[idx] = data
+                }
+            }
+        }
         list.clear()
         list.addAll(ChatHistoryRepo.searchChat(value))
-        if (list.isEmpty()) {
-            return
-        }
         var currItem: ChatHistoryData? by remember { mutableStateOf(null) }
         Box(modifier = Modifier.fillMaxSize()) {
             MyVerticalListViewer(
                 pinId = pin.getPinId(),
                 list = list,
+                emptyContent = {
+                    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = AppInfo.currLanguageBundle.shared.noContent,
+                            color = MaterialTheme.colors.onSecondary.copy(0.7f),
+                            fontSize = MaterialTheme.typography.h5.fontSize,
+                        )
+                    }
+                },
             ) { _, item ->
                 var modifier = Modifier.fillMaxWidth().height(30.dp).onClick {
                     currItem = item
