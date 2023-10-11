@@ -1,7 +1,9 @@
 package top.myrest.myflow.chatgpt
 
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import javax.swing.SwingUtilities
 import cn.hutool.core.io.FileUtil
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import top.myrest.myflow.AppInfo
@@ -18,7 +20,9 @@ import top.myrest.myflow.enumeration.ActionWindowBehavior
 import top.myrest.myflow.language.LanguageBundle
 import top.myrest.myflow.util.singleList
 
-class ChatGptActionHandler : ActionFocusedKeywordHandler {
+class ChatGptActionHandler : ActionFocusedKeywordHandler() {
+
+    override fun getThisHandler(): ActionFocusedKeywordHandler = this
 
     override fun getCustomizeSettingContent(): SettingsContent {
         return ChatGptSettingsContent()
@@ -52,7 +56,22 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
-    override fun exitFocusMode() {}
+    private var chatHistoryWindow: ChatHistoryWindow? = ChatHistoryWindow(this, pin)
+
+    private val inactive = AtomicBoolean(true)
+
+    init {
+        SwingUtilities.invokeLater {
+            chatHistoryWindow?.attach()
+            Composes.actionWindowProvider?.setAction(pin, "", false)
+            inactive.set(false)
+        }
+    }
+
+    override fun exitFocusMode() {
+        chatHistoryWindow?.dispose()
+        chatHistoryWindow = null
+    }
 
     override fun getWorkDir(): File = FileUtil.getUserHomeDir()
 
@@ -64,6 +83,9 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
     }
 
     override fun queryAction(action: String): List<ActionResult> {
+        if (inactive.get()) {
+            return emptyList()
+        }
         if (action.isBlank()) {
             return results.get()
         }

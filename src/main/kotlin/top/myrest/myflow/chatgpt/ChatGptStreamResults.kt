@@ -188,7 +188,7 @@ internal object ChatGptStreamResults {
     }
 
     @OptIn(ExperimentalFoundationApi::class)
-    private fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
+    fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
         actionId = "",
         result = this,
         contentHeight = -1,
