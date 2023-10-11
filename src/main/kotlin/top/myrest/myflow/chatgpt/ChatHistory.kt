@@ -7,24 +7,34 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TextFieldDefaults.indicatorLine
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -78,21 +88,26 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
         insertDoc(userDoc)
     }
 
+    fun removeBySession(session: String) {
+        removeBy(ObjectFilters.eq("session", session))
+    }
+
     fun searchChat(keyword: String): List<ChatHistoryData> {
         val list = if (keyword.isBlank()) {
-            getAll().sortedByDescending { it.at }
+            getAll().sortedByDescending { it.id }
         } else {
             val kw = SearchingSyntax.normalizeKeyword(keyword, fuzzyStart = true, fuzzyEnd = true)
-            getBy(ObjectFilters.text("content", kw), descOpt("at"))
+            val sessions = getBy(ObjectFilters.text("content", kw), idDescOption).distinctBy { it.session }.map { it.session }
+            getBy(ObjectFilters.`in`("session", *sessions.toTypedArray()), idDescOption)
         }
 
         var session = ""
+        var result = mutableListOf<ChatHistoryDoc>()
         val results = mutableListOf<ChatHistoryData>()
-        val result = mutableListOf<ChatHistoryDoc>()
         list.forEach {
             if (session != it.session && result.isNotEmpty()) {
                 results.add(ChatHistoryData(result.first(), result))
-                result.clear()
+                result = mutableListOf()
             }
             session = it.session
             result.add(it)
@@ -135,9 +150,11 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
 
     @Composable
     @Suppress("FunctionName")
-    @OptIn(ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
     private fun ChatHistoryViewer(value: String) {
-        val list = ChatHistoryRepo.searchChat(value)
+        val list = remember { mutableStateListOf<ChatHistoryData>() }
+        list.clear()
+        list.addAll(ChatHistoryRepo.searchChat(value))
         if (list.isEmpty()) {
             return
         }
@@ -158,16 +175,35 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
                 MyHoverable(
                     hoveredBackground = MaterialTheme.colors.secondaryVariant,
                     modifier = modifier,
-                    contentAlignment = Alignment.CenterStart,
+                    contentAlignment = Alignment.CenterEnd,
                 ) {
-                    Text(
-                        text = item.firstUser.content,
-                        color = MaterialTheme.colors.onPrimary.copy(0.7f),
-                        modifier = Modifier.padding(start = 2.dp),
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = MaterialTheme.typography.h6.fontSize,
-                        maxLines = 1,
-                    )
+                    Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = item.firstUser.content,
+                            color = MaterialTheme.colors.onPrimary.copy(0.7f),
+                            modifier = Modifier.padding(start = 2.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = MaterialTheme.typography.h6.fontSize,
+                            maxLines = 1,
+                        )
+                    }
+
+                    if (it) {
+                        var hovered by remember { mutableStateOf(false) }
+                        Icon(
+                            imageVector = if (hovered) Icons.Filled.Delete else Icons.Outlined.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colors.onSecondary,
+                            modifier = Modifier.padding(end = 2.dp).height(16.dp).width(16.dp).onPointerEvent(eventType = PointerEventType.Enter) {
+                                hovered = true
+                            }.onPointerEvent(eventType = PointerEventType.Exit) {
+                                hovered = false
+                            }.onClick {
+                                ChatHistoryRepo.removeBySession(item.firstUser.session)
+                                list.remove(item)
+                            },
+                        )
+                    }
                 }
             }
         }
