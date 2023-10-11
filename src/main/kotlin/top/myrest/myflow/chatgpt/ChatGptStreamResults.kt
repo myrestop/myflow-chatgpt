@@ -1,11 +1,9 @@
 package top.myrest.myflow.chatgpt
 
 import java.io.File
-import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,14 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cn.hutool.core.date.DateUtil
 import cn.hutool.core.exceptions.ExceptionUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
@@ -203,86 +198,88 @@ internal object ChatGptStreamResults {
         content = {
             val isUser = role == Message.Role.USER.getName()
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                var showTime by remember { mutableStateOf(false) }
                 Image(
                     painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
                     contentDescription = AppConsts.LOGO,
-                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp).onPointerEvent(eventType = PointerEventType.Enter) {
-                        showTime = true
-                    }.onPointerEvent(eventType = PointerEventType.Exit) {
-                        showTime = false
-                    },
+                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp),
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                SelectionContainer {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().heightIn(min = MIN_SIZE.dp),
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        if (showTime) {
-                            Text(
-                                text = DateUtil.formatDateTime(Date(at)),
-                                color = MaterialTheme.colors.onPrimary.copy(0.6f),
-                                fontSize = MaterialTheme.typography.subtitle2.fontSize,
-                            )
-                        }
-                        when (type) {
-                            ContentType.TEXT -> {
-                                if (isUser) {
-                                    Text(
-                                        text = content,
-                                        color = MaterialTheme.colors.onSecondary,
-                                        fontSize = MaterialTheme.typography.h6.fontSize,
-                                        overflow = TextOverflow.Visible,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                } else {
-                                    MaterialTheme(
-                                        colors = MaterialTheme.colors,
-                                        typography = MaterialTheme.typography.copy(
-                                            body1 = MaterialTheme.typography.h6,
-                                        ),
-                                    ) {
-                                        MyMarkdownText(content)
-                                    }
-                                }
-                            }
-
-                            ContentType.IMAGES -> {
-                                Column {
-                                    value.readByJsonArray<String>().forEach { it ->
-                                        val img = ImgUtil.toImage(it)
-                                        val painter = Composes.getPainter(img)
-                                        if (painter != null) {
-                                            Box(contentAlignment = Alignment.BottomEnd) {
-                                                Image(painter = painter, contentDescription = "image", contentScale = ContentScale.None)
-                                                MyHoverable(padding = 3.dp) {
-                                                    Icon(
-                                                        imageVector = Icons.Outlined.Download,
-                                                        contentDescription = "Download",
-                                                        tint = MaterialTheme.colors.onSecondary,
-                                                        modifier = Modifier.height(16.dp).width(16.dp).onClick {
-                                                            val file = AppInfo.actionWindow.showFileChooser(fileToSave = true).firstOrNull()
-                                                            if (file != null) {
-                                                                ImgUtil.write(img, file)
-                                                            }
-                                                        },
-                                                    )
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.height(12.dp))
-                                        }
-                                    }
-                                }
-                            }
-
-                            else -> {}
-                        }
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth().heightIn(min = MIN_SIZE.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+//                    if (isUser) {
+//                        Text(
+//                            text = DateUtil.formatDateTime(Date(at)),
+//                            color = MaterialTheme.colors.onPrimary.copy(0.3f),
+//                            fontSize = MaterialTheme.typography.subtitle2.fontSize,
+//                        )
+//                    }
+                    ChatResponseViewer(isUser)
                 }
             }
         },
     )
+
+    @Composable
+    @Suppress("FunctionName")
+    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+    private fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
+        when (type) {
+            ContentType.TEXT -> {
+                SelectionContainer {
+                    if (isUser) {
+                        Text(
+                            text = content,
+                            color = MaterialTheme.colors.onSecondary,
+                            fontSize = MaterialTheme.typography.h6.fontSize,
+                            overflow = TextOverflow.Visible,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    } else {
+                        MaterialTheme(
+                            colors = MaterialTheme.colors,
+                            typography = MaterialTheme.typography.copy(
+                                body1 = MaterialTheme.typography.h6,
+                            ),
+                        ) {
+                            MyMarkdownText(content)
+                        }
+                    }
+                }
+            }
+
+            ContentType.IMAGES -> {
+                Column {
+                    value.readByJsonArray<String>().forEach { it ->
+                        val img = ImgUtil.toImage(it)
+                        val painter = Composes.getPainter(img)
+                        if (painter != null) {
+                            Box(contentAlignment = Alignment.BottomEnd) {
+                                Image(painter = painter, contentDescription = "image", contentScale = ContentScale.None)
+                                MyHoverable(padding = 3.dp) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Download,
+                                        contentDescription = "Download",
+                                        tint = MaterialTheme.colors.onSecondary,
+                                        modifier = Modifier.height(16.dp).width(16.dp).onClick {
+                                            val file = AppInfo.actionWindow.showFileChooser(fileToSave = true).firstOrNull()
+                                            if (file != null) {
+                                                ImgUtil.write(img, file)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+                }
+            }
+
+            else -> {}
+        }
+    }
 
     private class OpenAiStreamEventListener : ConsoleEventSourceListener() {
 
@@ -302,7 +299,7 @@ internal object ChatGptStreamResults {
 
         override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
             if (DevProps.isDev) {
-                log.info("get openai data: {}", data);
+                log.debug("get openai data: {}", data);
             }
             if (closed.get()) {
                 eventSource.cancel()

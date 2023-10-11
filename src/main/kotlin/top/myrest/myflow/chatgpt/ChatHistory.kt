@@ -24,6 +24,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TextFieldDefaults.indicatorLine
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -200,7 +201,24 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
                         )
                     }
                 },
-            ) { _, item ->
+            ) { idx, item ->
+                if (idx == 0) {
+                    MyHoverable(
+                        hoveredBackground = MaterialTheme.colors.secondaryVariant,
+                        modifier = Modifier.fillMaxWidth().height(30.dp).onClick {
+                            session.results.set(emptyList())
+                            Composes.actionWindowProvider?.updateActionResultList(pin, emptyList())
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AddCircle,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colors.onSecondary,
+                            modifier = Modifier.height(20.dp).width(20.dp),
+                        )
+                    }
+                }
                 var modifier = Modifier.fillMaxWidth().height(30.dp).onClick {
                     currItem = item
                     session.results.set(item.list.map { it.toResult() })
@@ -214,7 +232,7 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
                     modifier = modifier,
                     contentAlignment = Alignment.CenterEnd,
                 ) {
-                    Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = item.firstUser.content,
                             color = MaterialTheme.colors.onPrimary.copy(0.7f),
