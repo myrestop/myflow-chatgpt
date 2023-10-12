@@ -1,9 +1,11 @@
 package top.myrest.myflow.chatgpt
 
 import java.io.File
+import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,11 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import cn.hutool.core.date.DateUtil
 import cn.hutool.core.exceptions.ExceptionUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
@@ -190,7 +195,7 @@ internal object ChatGptStreamResults {
         return Message.builder().role(role).content(content).build()
     }
 
-    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+    @OptIn(ExperimentalComposeUiApi::class)
     fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
         actionId = "",
         result = this,
@@ -198,23 +203,28 @@ internal object ChatGptStreamResults {
         content = {
             val isUser = role == Message.Role.USER.getName()
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                var showTime by remember { mutableStateOf(false) }
                 Image(
                     painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
                     contentDescription = AppConsts.LOGO,
-                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp),
+                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp).onPointerEvent(eventType = PointerEventType.Enter) {
+                        showTime = true
+                    }.onPointerEvent(eventType = PointerEventType.Exit) {
+                        showTime = false
+                    },
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth().heightIn(min = MIN_SIZE.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-//                    if (isUser) {
-//                        Text(
-//                            text = DateUtil.formatDateTime(Date(at)),
-//                            color = MaterialTheme.colors.onPrimary.copy(0.3f),
-//                            fontSize = MaterialTheme.typography.subtitle2.fontSize,
-//                        )
-//                    }
+                    if (isUser && showTime) {
+                        Text(
+                            text = DateUtil.formatDateTime(Date(at)),
+                            color = MaterialTheme.colors.onPrimary.copy(0.3f),
+                            fontSize = MaterialTheme.typography.subtitle2.fontSize,
+                        )
+                    }
                     ChatResponseViewer(isUser)
                 }
             }
@@ -223,12 +233,12 @@ internal object ChatGptStreamResults {
 
     @Composable
     @Suppress("FunctionName")
-    @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+    @OptIn(ExperimentalFoundationApi::class)
     private fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
         when (type) {
             ContentType.TEXT -> {
-                SelectionContainer {
-                    if (isUser) {
+                if (isUser) {
+                    SelectionContainer {
                         Text(
                             text = content,
                             color = MaterialTheme.colors.onSecondary,
@@ -236,15 +246,15 @@ internal object ChatGptStreamResults {
                             overflow = TextOverflow.Visible,
                             fontWeight = FontWeight.Bold,
                         )
-                    } else {
-                        MaterialTheme(
-                            colors = MaterialTheme.colors,
-                            typography = MaterialTheme.typography.copy(
-                                body1 = MaterialTheme.typography.h6,
-                            ),
-                        ) {
-                            MyMarkdownText(content)
-                        }
+                    }
+                } else {
+                    MaterialTheme(
+                        colors = MaterialTheme.colors,
+                        typography = MaterialTheme.typography.copy(
+                            body1 = MaterialTheme.typography.h6,
+                        ),
+                    ) {
+                        MyMarkdownText(content)
                     }
                 }
             }
@@ -343,31 +353,29 @@ internal object ChatGptStreamResults {
                     modifier = Modifier.width(40.dp),
                 )
                 Spacer(modifier = Modifier.width(16.dp))
-                SelectionContainer {
-                    var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
-                    LaunchedEffect(Unit) {
-                        while (!closed.get()) {
-                            delay(50)
-                            if (hasNewText.get()) {
-                                text = textBuffer.toString()
-                                hasNewText.set(false)
-                            }
-                        }
-                        val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), textBuffer.toString())
-                        renderChatResult(session, doc, chatDoc)
-                    }
-                    DisposableEffect(Unit) {
-                        onDispose {
-                            closed.set(true)
+                var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
+                LaunchedEffect(Unit) {
+                    while (!closed.get()) {
+                        delay(50)
+                        if (hasNewText.get()) {
+                            text = textBuffer.toString()
+                            hasNewText.set(false)
                         }
                     }
-                    Text(
-                        text = text,
-                        color = MaterialTheme.colors.onPrimary,
-                        fontSize = MaterialTheme.typography.h6.fontSize,
-                        overflow = TextOverflow.Visible,
-                    )
+                    val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), textBuffer.toString())
+                    renderChatResult(session, doc, chatDoc)
                 }
+                DisposableEffect(Unit) {
+                    onDispose {
+                        closed.set(true)
+                    }
+                }
+                Text(
+                    text = text,
+                    color = MaterialTheme.colors.onPrimary,
+                    fontSize = MaterialTheme.typography.h6.fontSize,
+                    overflow = TextOverflow.Visible,
+                )
             }
         }
 

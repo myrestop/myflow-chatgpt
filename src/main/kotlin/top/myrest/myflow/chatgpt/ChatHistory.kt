@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.TextStyle
@@ -271,11 +272,13 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
         val interactionSource = remember { MutableInteractionSource() }
         BasicTextField(
             value = value,
+            singleLine = true,
             onValueChange = onValueUpdate,
             textStyle = TextStyle(
                 color = MaterialTheme.colors.onPrimary.copy(0.7f),
                 fontSize = MaterialTheme.typography.h6.fontSize,
             ),
+            cursorBrush = SolidColor(MaterialTheme.colors.onPrimary),
             modifier = Modifier.height(30.dp).fillMaxWidth().indicatorLine(
                 enabled = true,
                 isError = false,

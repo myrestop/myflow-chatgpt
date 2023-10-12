@@ -38,11 +38,12 @@ tasks.withType<KotlinCompile> {
 
 tasks.jar {
     archiveFileName.set(entry)
+    val excludeJars = setOf("annotations-24.0.1.jar", "slf4j-api-2.0.6.jar", "kotlin-stdlib-1.8.20.jar", "kotlin-stdlib-common-1.8.20.jar", "kotlin-stdlib-jdk8-1.8.20.jar", "kotlin-stdlib-jdk7-1.8.20.jar")
     val exists = mutableSetOf<String>()
     val files = mutableListOf<Any>()
     configurations.runtimeClasspath.get().allDependencies.forEach { dependency ->
         configurations.runtimeClasspath.get().files(dependency).forEach { file ->
-            if (exists.add(file.name)) {
+            if (exists.add(file.name) && !excludeJars.contains(file.name)) {
                 println(file.name)
                 files.add(if (file.isDirectory) file else zipTree(file))
             }
@@ -55,6 +56,13 @@ tasks.jar {
         "META-INF/NOTICE",
         "META-INF/LICENSE",
         "META-INF/versions/9/module-info.class",
+        "release-timestamp.txt",
+        "README.md",
+        "LICENSE",
+        "latestchanges.html",
+        "changelog.txt",
+        "AUTHORS",
+        ".gitkeep",
     )
 }
 

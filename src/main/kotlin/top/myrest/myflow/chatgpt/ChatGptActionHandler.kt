@@ -52,8 +52,6 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
 
     internal val results = AtomicReference(emptyList<ActionResult>())
 
-    private val flag = AtomicReference("")
-
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
 
     var chatHistoryWindow: ChatHistoryWindow? = ChatHistoryWindow(this, pin)
@@ -136,7 +134,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                         actionWindowBehavior = ActionWindowBehavior.NOTHING,
                         actionCallback = {
                             if (it is String) {
-                                assignFlag("chat")
+                                prepareChat()
                                 Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getStreamChatResult(this, it, model).singleList())
                             }
                         },
@@ -151,7 +149,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                     callback.copy(
                         actionCallback = {
                             if (it is String) {
-                                assignFlag("image")
+                                prepareChat()
                                 Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getGenerateImageResult(this, it))
                             }
                         },
@@ -212,7 +210,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                         callback.copy(
                             actionCallback = {
                                 if (it is File) {
-                                    assignFlag("image")
+                                    prepareChat()
                                     Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getVariationImageResult(this, it))
                                 }
                             },
@@ -228,22 +226,8 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
     /**
      * 标记是否重新开启会话
      */
-    private fun assignFlag(flag: String) {
+    private fun prepareChat() {
         Composes.actionWindowProvider?.setAction(pin, "", false)
-        if (flag.isEmpty()) {
-            return
-        }
-
-        val preFlag = this.flag.get()
-        this.flag.set(flag)
-        if (preFlag.isEmpty()) {
-            return
-        }
-
-        if (preFlag != flag) {
-            // 开启新会话
-            results.set(emptyList())
-        }
     }
 
     private fun setApiKeyResult(action: String) = ActionResult(
