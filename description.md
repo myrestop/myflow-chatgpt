@@ -1,2 +1,3 @@
 This plugin is a unofficial OpenAI ChatGPT client, that support chat, generate image, image variation, and chat history management.
-Client connect to OpenAI use your self API Key, and all the data save on your local device, you don't have to worry about data privacy issues.
+
+Client connect to OpenAI use your self API Key, and all the data save on your local device, you don't need worry about data privacy issues.
