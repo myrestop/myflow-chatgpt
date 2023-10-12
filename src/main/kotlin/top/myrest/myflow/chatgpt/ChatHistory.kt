@@ -53,6 +53,7 @@ import top.myrest.myflow.component.ActionKeywordPin
 import top.myrest.myflow.component.AttachedWindow
 import top.myrest.myflow.component.Composes
 import top.myrest.myflow.component.MyHoverable
+import top.myrest.myflow.component.MyMaterialTheme
 import top.myrest.myflow.component.MyVerticalListViewer
 import top.myrest.myflow.db.AutoIncrementDoc
 import top.myrest.myflow.db.BaseRepo
@@ -165,7 +166,7 @@ internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, pri
     override fun attach() {
         super.attach()
         setContent {
-            MaterialTheme(colors = AppInfo.themeColors, typography = AppInfo.typography) {
+            MyMaterialTheme {
                 Column(modifier = Modifier.fillMaxSize().border(1.dp, MaterialTheme.colors.primaryVariant).background(MaterialTheme.colors.background)) {
                     var value by remember { mutableStateOf("") }
                     SearchTextField(value) { value = it }

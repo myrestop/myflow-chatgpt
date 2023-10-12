@@ -22,8 +22,6 @@ import top.myrest.myflow.util.singleList
 
 class ChatGptActionHandler : ActionFocusedKeywordHandler() {
 
-    override fun getThisHandler(): ActionFocusedKeywordHandler = this
-
     override fun getCustomizeSettingContent(): SettingsContent {
         return ChatGptSettingsContent()
     }
