@@ -57,6 +57,7 @@ import top.myrest.myflow.component.MyVerticalListViewer
 import top.myrest.myflow.db.AutoIncrementDoc
 import top.myrest.myflow.db.BaseRepo
 import top.myrest.myflow.enumeration.CornerType
+import top.myrest.myflow.enumeration.DataModifyMethod
 import top.myrest.myflow.event.ActionPinKeywordChangedEvent
 import top.myrest.myflow.event.BaseEventListener
 import top.myrest.myflow.event.EventExtraDetail
@@ -122,6 +123,15 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
         }
 
         return results
+    }
+
+    override fun onDataSync(method: DataModifyMethod, doc: ChatHistoryDoc) {
+        doc.id = null
+        when (method) {
+            DataModifyMethod.UPDATE -> {}
+            DataModifyMethod.ADD -> insertDoc(doc)
+            DataModifyMethod.DELETE -> removeBySession(doc.session)
+        }
     }
 }
 

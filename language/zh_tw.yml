@@ -1,0 +1,5 @@
+input-api-key: 請輸入你OpenAI賬戶的ApiKey
+set-api-key: 設置ApiKey
+balance: 餘額
+model: 模型
+temperature: 取樣溫度
