@@ -5,7 +5,7 @@ names:
   ZH_TW: 智能助手
 entry: ./myflow-chatgpt.jar
 version: 1.0.0
-logo: ./logos/chatgpt.png
+logo: ./logos/robot.png
 compatible-version:
   since-build: 0
   until-build: 2147483647
@@ -27,6 +27,6 @@ languages:
 actions:
   - keywords:
       - '/'
-    logo: ./logos/chatgpt.png
+    logo: ./logos/robot.png
     handler: top.myrest.myflow.ai.AssistantActionHandler
     name-bundle-id: ai-assistant

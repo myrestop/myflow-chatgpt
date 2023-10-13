@@ -3,3 +3,4 @@ set-openai-api-key: Set OpenAI Api Key
 chatgpt-model: Model
 chatgpt-temperature: Temperature
 ai-assistant: AI Assistant
+spark-desk: Spark Desk

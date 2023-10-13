@@ -43,7 +43,6 @@ import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.action.plain
-import top.myrest.myflow.ai.AssistantActionHandler
 import top.myrest.myflow.ai.AssistantFocusedSession
 import top.myrest.myflow.ai.ChatHistoryDoc
 import top.myrest.myflow.ai.ChatHistoryRepo
@@ -64,9 +63,9 @@ internal object ChatgptStreamResults {
 
     private val log = LoggerFactory.getLogger(ChatgptStreamResults::class.java)
 
-    val client = OpenAiClient.builder().apiKey(listOf(AssistantActionHandler.openaiApiKey)).build()
+    val client = OpenAiClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
 
-    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(AssistantActionHandler.openaiApiKey)).build()
+    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
 
     fun getVariationImageResult(session: AssistantFocusedSession, file: File): List<ActionResult> {
         return getImageResult(
@@ -150,7 +149,7 @@ internal object ChatgptStreamResults {
 
         val doc = action.asUserTextDoc(session)
         messages.add(doc.toMessage())
-        val completion = ChatCompletion.builder().temperature(AssistantActionHandler.openaiTemperature.toDouble()).model(model).messages(messages).build()
+        val completion = ChatCompletion.builder().temperature(Constants.openaiTemperature.toDouble()).model(model).messages(messages).build()
         val listener = OpenAiStreamEventListener()
         streamClient.streamChatCompletion(completion, listener)
 

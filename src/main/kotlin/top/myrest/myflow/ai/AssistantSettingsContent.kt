@@ -46,15 +46,15 @@ internal class AssistantSettingsContent : SettingsContent {
                     SettingInputText(
                         label = "API Key",
                         labelWidth = 120,
-                        value = AssistantActionHandler.openaiApiKey,
+                        value = Constants.openaiApiKey,
                         placeholder = LanguageBundle.getBy(Constants.PLUGIN_ID, "input-openai-api-key"),
                         update = {
-                            AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_API_KEY] = it
+                            AppInfo.runtimeProps.paramMap[Constants.OPEN_API_KEY] = it
                         },
                     )
                 }
 
-                var model by remember { mutableStateOf(AssistantActionHandler.openaiModel) }
+                var model by remember { mutableStateOf(Constants.openaiModel) }
                 SettingCombo(
                     label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-model"),
                     labelWidth = 120,
@@ -63,11 +63,11 @@ internal class AssistantSettingsContent : SettingsContent {
                     valueMapper = { it },
                     onMenuClick = {
                         model = it
-                        AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_MODEL_KEY] = it
+                        AppInfo.runtimeProps.paramMap[Constants.OPEN_MODEL_KEY] = it
                     },
                 )
 
-                var temperature: Float by remember { mutableStateOf(AssistantActionHandler.openaiTemperature) }
+                var temperature: Float by remember { mutableStateOf(Constants.openaiTemperature) }
                 SettingSlider(
                     label = LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-temperature"),
                     labelWidth = 120,
@@ -78,7 +78,7 @@ internal class AssistantSettingsContent : SettingsContent {
                     },
                     update = {
                         temperature = it
-                        AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_TEMPERATURE_KEY] = it
+                        AppInfo.runtimeProps.paramMap[Constants.OPEN_TEMPERATURE_KEY] = it
                     },
                 )
             }

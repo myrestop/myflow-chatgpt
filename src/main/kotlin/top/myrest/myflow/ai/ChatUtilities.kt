@@ -47,7 +47,7 @@ import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.util.Jackson.readByJsonArray
 
-private const val MIN_SIZE = 40
+private const val MIN_SIZE = 36
 
 internal fun resolveSession(session: AssistantFocusedSession): String {
     for (result in session.results.get()) {
@@ -81,13 +81,14 @@ internal fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             var showTime by remember { mutableStateOf(false) }
             Image(
-                painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatgptLogo) ?: painterResource(AppInfo.LOGO),
+                painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.robotLogo) ?: painterResource(AppInfo.LOGO),
                 contentDescription = AppConsts.LOGO,
                 modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp).onPointerEvent(eventType = PointerEventType.Enter) {
                     showTime = true
                 }.onPointerEvent(eventType = PointerEventType.Exit) {
                     showTime = false
                 },
+                contentScale = ContentScale.FillBounds,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(

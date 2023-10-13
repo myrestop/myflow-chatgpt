@@ -3,3 +3,4 @@ set-openai-api-key: 设置ApiKey
 chat-gpt-model: 模型
 chat-gpt-temperature: 取样温度
 ai-assistant: 智能助手
+spark-desk: 星火大模型
