@@ -1,5 +1,8 @@
-id: top.myrest.myflow.chatgpt
-name: Your ChatGPT
+id: top.myrest.myflow.ai
+name: Ai Assistant
+names:
+  ZH_CN: 智能助手
+  ZH_TW: 智能助手
 entry: ./myflow-chatgpt.jar
 version: 1.0.0
 logo: ./logos/chatgpt.png
@@ -25,5 +28,5 @@ actions:
   - keywords:
       - '/'
     logo: ./logos/chatgpt.png
-    handler: top.myrest.myflow.chatgpt.ChatGptActionHandler
-    name-bundle-id: OpenAI ChatGPT
+    handler: top.myrest.myflow.ai.AssistantActionHandler
+    name-bundle-id: ai-assistant

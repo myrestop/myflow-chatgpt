@@ -1,5 +1,5 @@
-input-api-key: Please Input Your OpenAI Api Key
-set-api-key: Set OpenAI Api Key
-balance: Balance
-model: Model
-temperature: Temperature
+input-openai-api-key: Please Input Your OpenAI Api Key
+set-openai-api-key: Set OpenAI Api Key
+chatgpt-model: Model
+chatgpt-temperature: Temperature
+ai-assistant: AI Assistant

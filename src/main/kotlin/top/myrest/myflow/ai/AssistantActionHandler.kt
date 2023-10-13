@@ -1,4 +1,4 @@
-package top.myrest.myflow.chatgpt
+package top.myrest.myflow.ai
 
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -13,6 +13,7 @@ import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.ActionResultCallback
 import top.myrest.myflow.action.plain
 import top.myrest.myflow.action.singleCallback
+import top.myrest.myflow.ai.openai.ChatgptStreamResults
 import top.myrest.myflow.component.ActionKeywordPin
 import top.myrest.myflow.component.Composes
 import top.myrest.myflow.component.SettingsContent
@@ -20,33 +21,33 @@ import top.myrest.myflow.enumeration.ActionWindowBehavior
 import top.myrest.myflow.language.LanguageBundle
 import top.myrest.myflow.util.singleList
 
-class ChatGptActionHandler : ActionFocusedKeywordHandler() {
+class AssistantActionHandler : ActionFocusedKeywordHandler() {
 
     override fun getCustomizeSettingContent(): SettingsContent {
-        return ChatGptSettingsContent()
+        return AssistantSettingsContent()
     }
 
     override fun enterFocusMode(pin: ActionKeywordPin): ActionFocusedSession {
-        return ChatGptFocusedSession(pin)
+        return AssistantFocusedSession(pin)
     }
 
     companion object {
 
-        const val API_KEY = Constants.PLUGIN_ID + ".ApiKey"
+        const val OPEN_API_KEY = Constants.PLUGIN_ID + ".openai.ApiKey"
 
-        const val TEMPERATURE_KEY = Constants.PLUGIN_ID + ".Temperature"
+        const val OPEN_TEMPERATURE_KEY = Constants.PLUGIN_ID + ".chatgpt.Temperature"
 
-        const val MODEL_KEY = Constants.PLUGIN_ID + ".Model"
+        const val OPEN_MODEL_KEY = Constants.PLUGIN_ID + ".chatgpt.Model"
 
-        var apiKey: String = AppInfo.runtimeProps.getParam(API_KEY, "")
+        val openaiApiKey: String get() = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "")
 
-        var temperature: Float = AppInfo.runtimeProps.getParam(TEMPERATURE_KEY, 0.6f)
+        val openaiTemperature: Float get() = AppInfo.runtimeProps.getParam(OPEN_TEMPERATURE_KEY, 0.6f)
 
-        var model: String = AppInfo.runtimeProps.getParam(MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
+        val openaiModel: String get() = AppInfo.runtimeProps.getParam(OPEN_MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
     }
 }
 
-internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSession(pin) {
+internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSession(pin) {
 
     internal val results = AtomicReference(emptyList<ActionResult>())
 
@@ -72,8 +73,8 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
     override fun getWorkDir(): File = FileUtil.getUserHomeDir()
 
     override fun getLabel(): String {
-        if (ChatGptActionHandler.apiKey.isBlank()) {
-            return LanguageBundle.getBy(Constants.PLUGIN_ID, "input-api-key")
+        if (AssistantActionHandler.openaiApiKey.isBlank()) {
+            return LanguageBundle.getBy(Constants.PLUGIN_ID, "input-openai-api-key")
         }
         return sendMessageTip
     }
@@ -85,7 +86,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
         if (action.isBlank()) {
             return results.get()
         }
-        if (ChatGptActionHandler.apiKey.isBlank()) {
+        if (AssistantActionHandler.openaiApiKey.isBlank()) {
             return setApiKeyResult(action).singleList()
         }
 
@@ -120,7 +121,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
             )
         }
 
-        val modelList = mutableListOf(ChatGptActionHandler.model)
+        val modelList = mutableListOf(AssistantActionHandler.openaiModel)
         modelList.addAll(ChatCompletion.Model.values().map { it.getName() })
         list.add(
             defaultResult.copy(
@@ -133,7 +134,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                         actionCallback = {
                             if (it is String) {
                                 prepareChat()
-                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getStreamChatResult(this, it, model).singleList())
+                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatgptStreamResults.getStreamChatResult(this, it, model).singleList())
                             }
                         },
                     )
@@ -148,7 +149,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                         actionCallback = {
                             if (it is String) {
                                 prepareChat()
-                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getGenerateImageResult(this, it))
+                                Composes.actionWindowProvider?.updateActionResultList(pin, ChatgptStreamResults.getGenerateImageResult(this, it))
                             }
                         },
                     )
@@ -209,7 +210,7 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
                             actionCallback = {
                                 if (it is File) {
                                     prepareChat()
-                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatGptStreamResults.getVariationImageResult(this, it))
+                                    Composes.actionWindowProvider?.updateActionResultList(pin, ChatgptStreamResults.getVariationImageResult(this, it))
                                 }
                             },
                         )
@@ -231,14 +232,13 @@ internal class ChatGptFocusedSession(pin: ActionKeywordPin) : ActionFocusedSessi
     private fun setApiKeyResult(action: String) = ActionResult(
         actionId = "",
         title = listOf(action.plain),
-        subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "set-api-key"),
+        subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "set-openai-api-key"),
         result = action,
         callbacks = singleCallback(
             actionWindowBehavior = ActionWindowBehavior.EMPTY_LIST,
         ) {
             if (it is String && it.startsWith("sk-")) {
-                AppInfo.runtimeProps.paramMap[ChatGptActionHandler.API_KEY] = it
-                ChatGptActionHandler.apiKey = it
+                AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_API_KEY] = it
             }
         },
     )

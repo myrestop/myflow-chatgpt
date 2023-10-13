@@ -1,4 +1,4 @@
-package top.myrest.myflow.chatgpt
+package top.myrest.myflow.ai
 
 import kotlin.math.max
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -48,7 +48,6 @@ import org.dizitart.no2.objects.Indices
 import org.dizitart.no2.objects.InheritIndices
 import org.dizitart.no2.objects.filters.ObjectFilters
 import top.myrest.myflow.AppInfo
-import top.myrest.myflow.chatgpt.ChatGptStreamResults.toResult
 import top.myrest.myflow.component.ActionKeywordPin
 import top.myrest.myflow.component.AttachedWindow
 import top.myrest.myflow.component.Composes
@@ -126,7 +125,7 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
         return results
     }
 
-    override fun onDataSync(method: DataModifyMethod, doc: ChatHistoryDoc) {
+    override fun onSyncFrom(method: DataModifyMethod, doc: ChatHistoryDoc) {
         doc.id = null
         when (method) {
             DataModifyMethod.UPDATE -> {}
@@ -149,7 +148,7 @@ internal data class ChatHistoryData(val firstUser: ChatHistoryDoc, val list: Lis
     }
 }
 
-internal class ChatHistoryWindow(private val session: ChatGptFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(CornerType.LEFT_SIDE, 200, null) {
+internal class ChatHistoryWindow(private val session: AssistantFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(CornerType.LEFT_SIDE, 200, null) {
 
     lateinit var updateChatList: (List<ChatHistoryDoc>) -> Unit
 

@@ -1,4 +1,4 @@
-package top.myrest.myflow.chatgpt
+package top.myrest.myflow.ai
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -23,7 +23,7 @@ import top.myrest.myflow.component.SettingSlider
 import top.myrest.myflow.component.SettingsContent
 import top.myrest.myflow.language.LanguageBundle
 
-internal class ChatGptSettingsContent : SettingsContent {
+internal class AssistantSettingsContent : SettingsContent {
     override val settingsContent: @Composable FuncPageScope.(pluginId: String) -> Unit
         get() = {
             Column(
@@ -46,32 +46,30 @@ internal class ChatGptSettingsContent : SettingsContent {
                     SettingInputText(
                         label = "API Key",
                         labelWidth = 120,
-                        value = ChatGptActionHandler.apiKey,
-                        placeholder = LanguageBundle.getBy(Constants.PLUGIN_ID, "input-api-key"),
+                        value = AssistantActionHandler.openaiApiKey,
+                        placeholder = LanguageBundle.getBy(Constants.PLUGIN_ID, "input-openai-api-key"),
                         update = {
-                            AppInfo.runtimeProps.paramMap[ChatGptActionHandler.API_KEY] = it
-                            ChatGptActionHandler.apiKey = it
+                            AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_API_KEY] = it
                         },
                     )
                 }
 
-                var model by remember { mutableStateOf(ChatGptActionHandler.model) }
+                var model by remember { mutableStateOf(AssistantActionHandler.openaiModel) }
                 SettingCombo(
-                    label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "model"),
+                    label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-model"),
                     labelWidth = 120,
                     value = model,
                     menus = ChatCompletion.Model.values().map { it.getName() },
                     valueMapper = { it },
                     onMenuClick = {
                         model = it
-                        AppInfo.runtimeProps.paramMap[ChatGptActionHandler.MODEL_KEY] = it
-                        ChatGptActionHandler.model = it
+                        AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_MODEL_KEY] = it
                     },
                 )
 
-                var temperature: Float by remember { mutableStateOf(ChatGptActionHandler.temperature) }
+                var temperature: Float by remember { mutableStateOf(AssistantActionHandler.openaiTemperature) }
                 SettingSlider(
-                    label = LanguageBundle.getBy(Constants.PLUGIN_ID, "temperature"),
+                    label = LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-temperature"),
                     labelWidth = 120,
                     value = temperature,
                     valueRange = 0f..2f,
@@ -80,8 +78,7 @@ internal class ChatGptSettingsContent : SettingsContent {
                     },
                     update = {
                         temperature = it
-                        AppInfo.runtimeProps.paramMap[ChatGptActionHandler.TEMPERATURE_KEY] = it
-                        ChatGptActionHandler.temperature = it
+                        AppInfo.runtimeProps.paramMap[AssistantActionHandler.OPEN_TEMPERATURE_KEY] = it
                     },
                 )
             }

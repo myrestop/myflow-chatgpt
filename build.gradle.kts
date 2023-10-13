@@ -20,6 +20,7 @@ val myflowVersion = "1.0.0"
 val okhttpVersion = "4.9.0"
 
 dependencies {
+    implementation("com.unfbx:SparkDesk-Java:1.0.0")
     implementation("com.unfbx:chatgpt-java:1.1.0") {
         exclude(group = "cn.hutool", module = "hutool-all")
         exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")

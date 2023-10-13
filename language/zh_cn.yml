@@ -1,5 +1,5 @@
-input-api-key: 请输入你OpenAI账户的ApiKey
-set-api-key: 设置ApiKey
-balance: 余额
-model: 模型
-temperature: 取样温度
+input-openai-api-key: 请输入你OpenAI账户的ApiKey
+set-openai-api-key: 设置ApiKey
+chat-gpt-model: 模型
+chat-gpt-temperature: 取样温度
+ai-assistant: 智能助手

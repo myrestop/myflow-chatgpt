@@ -1,27 +1,14 @@
-package top.myrest.myflow.chatgpt
+package top.myrest.myflow.ai.openai
 
 import java.io.File
-import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.onClick
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,20 +17,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import cn.hutool.core.date.DateUtil
 import cn.hutool.core.exceptions.ExceptionUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
-import cn.hutool.core.util.RandomUtil
 import com.unfbx.chatgpt.OpenAiClient
 import com.unfbx.chatgpt.OpenAiStreamClient
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
@@ -63,9 +43,16 @@ import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.action.plain
+import top.myrest.myflow.ai.AssistantActionHandler
+import top.myrest.myflow.ai.AssistantFocusedSession
+import top.myrest.myflow.ai.ChatHistoryDoc
+import top.myrest.myflow.ai.ChatHistoryRepo
+import top.myrest.myflow.ai.Constants
+import top.myrest.myflow.ai.ContentType
+import top.myrest.myflow.ai.renderChatResult
+import top.myrest.myflow.ai.resolveSession
+import top.myrest.myflow.ai.toResult
 import top.myrest.myflow.component.Composes
-import top.myrest.myflow.component.MyHoverable
-import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.dev.DevProps
 import top.myrest.myflow.util.AsyncTasks
@@ -73,17 +60,15 @@ import top.myrest.myflow.util.Jackson.readByJson
 import top.myrest.myflow.util.Jackson.readByJsonArray
 import top.myrest.myflow.util.Jackson.toJsonString
 
-internal object ChatGptStreamResults {
+internal object ChatgptStreamResults {
 
-    private val log = LoggerFactory.getLogger(ChatGptStreamResults::class.java)
+    private val log = LoggerFactory.getLogger(ChatgptStreamResults::class.java)
 
-    private const val MIN_SIZE = 40
+    val client = OpenAiClient.builder().apiKey(listOf(AssistantActionHandler.openaiApiKey)).build()
 
-    val client = OpenAiClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
+    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(AssistantActionHandler.openaiApiKey)).build()
 
-    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(ChatGptActionHandler.apiKey)).build()
-
-    fun getVariationImageResult(session: ChatGptFocusedSession, file: File): List<ActionResult> {
+    fun getVariationImageResult(session: AssistantFocusedSession, file: File): List<ActionResult> {
         return getImageResult(
             session = session,
             action = AppInfo.currLanguageBundle.shared.variation,
@@ -94,7 +79,7 @@ internal object ChatGptStreamResults {
         )
     }
 
-    fun getModifyImageResult(session: ChatGptFocusedSession, action: String): List<ActionResult> {
+    fun getModifyImageResult(session: AssistantFocusedSession, action: String): List<ActionResult> {
         return getImageResult(
             session = session,
             action = action,
@@ -117,7 +102,7 @@ internal object ChatGptStreamResults {
         )
     }
 
-    fun getGenerateImageResult(session: ChatGptFocusedSession, action: String): List<ActionResult> {
+    fun getGenerateImageResult(session: AssistantFocusedSession, action: String): List<ActionResult> {
         return getImageResult(
             session = session,
             action = action,
@@ -129,7 +114,7 @@ internal object ChatGptStreamResults {
     }
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    private fun getImageResult(session: ChatGptFocusedSession, action: String, getImages: (ChatGptFocusedSession, String) -> List<Item>): List<ActionResult> {
+    private fun getImageResult(session: AssistantFocusedSession, action: String, getImages: (AssistantFocusedSession, String) -> List<Item>): List<ActionResult> {
         AsyncTasks.execute {
             val userDoc = action.asUserTextDoc(session)
             val imageDoc = try {
@@ -150,11 +135,11 @@ internal object ChatGptStreamResults {
         }
 
         return listOf(
-            ActionResult(actionId = "", logo = Constants.chatGptLogo, title = listOf(AppInfo.currLanguageBundle.shared.generating.plain))
+            ActionResult(actionId = "", logo = Constants.chatgptLogo, title = listOf(AppInfo.currLanguageBundle.shared.generating.plain))
         )
     }
 
-    fun getStreamChatResult(session: ChatGptFocusedSession, action: String, model: String): ActionResult {
+    fun getStreamChatResult(session: AssistantFocusedSession, action: String, model: String): ActionResult {
         val messages = mutableListOf<Message>()
         session.results.get().forEach {
             val result = it.result
@@ -165,7 +150,7 @@ internal object ChatGptStreamResults {
 
         val doc = action.asUserTextDoc(session)
         messages.add(doc.toMessage())
-        val completion = ChatCompletion.builder().temperature(ChatGptActionHandler.temperature.toDouble()).model(model).messages(messages).build()
+        val completion = ChatCompletion.builder().temperature(AssistantActionHandler.openaiTemperature.toDouble()).model(model).messages(messages).build()
         val listener = OpenAiStreamEventListener()
         streamClient.streamChatCompletion(completion, listener)
 
@@ -173,122 +158,15 @@ internal object ChatGptStreamResults {
             actionId = "",
             contentHeight = -1,
             content = {
-                listener.ChatGptStreamResult(session, doc)
+                listener.ChatgptStreamResult(session, doc)
             },
         )
     }
 
-    private fun String.asUserTextDoc(session: ChatGptFocusedSession) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)
-
-    private fun resolveSession(session: ChatGptFocusedSession): String {
-        for (result in session.results.get()) {
-            val finalResult = result.result
-            if (finalResult is ChatHistoryDoc && finalResult.session.isNotBlank()) {
-                return finalResult.session
-            }
-        }
-        val length = RandomUtil.randomInt(5, 10)
-        return RandomUtil.randomString(length)
-    }
+    private fun String.asUserTextDoc(session: AssistantFocusedSession) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)
 
     private fun ChatHistoryDoc.toMessage(): Message {
         return Message.builder().role(role).content(content).build()
-    }
-
-    @OptIn(ExperimentalComposeUiApi::class)
-    fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
-        actionId = "",
-        result = this,
-        contentHeight = -1,
-        content = {
-            val isUser = role == Message.Role.USER.getName()
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                var showTime by remember { mutableStateOf(false) }
-                Image(
-                    painter = Composes.getPainter(if (isUser) Constants.userLogo else Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
-                    contentDescription = AppConsts.LOGO,
-                    modifier = Modifier.width(MIN_SIZE.dp).height(MIN_SIZE.dp).onPointerEvent(eventType = PointerEventType.Enter) {
-                        showTime = true
-                    }.onPointerEvent(eventType = PointerEventType.Exit) {
-                        showTime = false
-                    },
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(
-                    modifier = Modifier.fillMaxWidth().heightIn(min = MIN_SIZE.dp),
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    if (isUser && showTime) {
-                        Text(
-                            text = DateUtil.formatDateTime(Date(at)),
-                            color = MaterialTheme.colors.onPrimary.copy(0.3f),
-                            fontSize = MaterialTheme.typography.subtitle2.fontSize,
-                        )
-                    }
-                    ChatResponseViewer(isUser)
-                }
-            }
-        },
-    )
-
-    @Composable
-    @Suppress("FunctionName")
-    @OptIn(ExperimentalFoundationApi::class)
-    private fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
-        when (type) {
-            ContentType.TEXT -> {
-                if (isUser) {
-                    SelectionContainer {
-                        Text(
-                            text = content,
-                            color = MaterialTheme.colors.onSecondary,
-                            fontSize = MaterialTheme.typography.h6.fontSize,
-                            overflow = TextOverflow.Visible,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                } else {
-                    MaterialTheme(
-                        colors = MaterialTheme.colors,
-                        typography = MaterialTheme.typography.copy(
-                            body1 = MaterialTheme.typography.h6,
-                        ),
-                    ) {
-                        MyMarkdownText(content)
-                    }
-                }
-            }
-
-            ContentType.IMAGES -> {
-                Column {
-                    value.readByJsonArray<String>().forEach { it ->
-                        val img = ImgUtil.toImage(it)
-                        val painter = Composes.getPainter(img)
-                        if (painter != null) {
-                            Box(contentAlignment = Alignment.BottomEnd) {
-                                Image(painter = painter, contentDescription = "image", contentScale = ContentScale.None)
-                                MyHoverable(padding = 3.dp) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Download,
-                                        contentDescription = "Download",
-                                        tint = MaterialTheme.colors.onSecondary,
-                                        modifier = Modifier.height(16.dp).width(16.dp).onClick {
-                                            val file = AppInfo.actionWindow.showFileChooser(fileToSave = true).firstOrNull()
-                                            if (file != null) {
-                                                ImgUtil.write(img, file)
-                                            }
-                                        },
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                    }
-                }
-            }
-
-            else -> {}
-        }
     }
 
     private class OpenAiStreamEventListener : ConsoleEventSourceListener() {
@@ -345,10 +223,10 @@ internal object ChatGptStreamResults {
 
         @Composable
         @Suppress("FunctionName")
-        fun ChatGptStreamResult(session: ChatGptFocusedSession, doc: ChatHistoryDoc) {
+        fun ChatgptStreamResult(session: AssistantFocusedSession, doc: ChatHistoryDoc) {
             Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) {
                 Image(
-                    painter = Composes.getPainter(Constants.chatGptLogo) ?: painterResource(AppInfo.LOGO),
+                    painter = Composes.getPainter(Constants.chatgptLogo) ?: painterResource(AppInfo.LOGO),
                     contentDescription = AppConsts.LOGO,
                     modifier = Modifier.width(40.dp),
                 )
@@ -363,7 +241,7 @@ internal object ChatGptStreamResults {
                         }
                     }
                     val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), textBuffer.toString())
-                    renderChatResult(session, doc, chatDoc)
+                    renderChatResult(session, doc, chatDoc, !failure.get())
                 }
                 DisposableEffect(Unit) {
                     onDispose {
@@ -377,17 +255,6 @@ internal object ChatGptStreamResults {
                     overflow = TextOverflow.Visible,
                 )
             }
-        }
-
-        private fun renderChatResult(session: ChatGptFocusedSession, userDoc: ChatHistoryDoc, chatDoc: ChatHistoryDoc) {
-            val list = mutableListOf(userDoc.toResult(), chatDoc.toResult())
-            list.addAll(session.results.get())
-            if (!failure.get()) {
-                ChatHistoryRepo.addChat(userDoc, chatDoc)
-                session.results.set(list)
-                session.chatHistoryWindow?.updateChatList?.invoke(session.results.get().filter { it.result is ChatHistoryDoc }.map { it.result as ChatHistoryDoc })
-            }
-            Composes.actionWindowProvider?.updateActionResultList(session.pin, list)
         }
     }
 }
