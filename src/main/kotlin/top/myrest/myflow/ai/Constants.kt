@@ -34,6 +34,8 @@ internal object Constants {
 
     const val SPARK_API_KEY = "$PLUGIN_ID.spark.ApiKey"
 
+    const val SPARK_TEMPERATURE_KEY = "$PLUGIN_ID.spark.Temperature"
+
     val provider: String get() = AppInfo.runtimeProps.getParam(PROVIDER_KEY, OPENAI_PROVIDER)
 
     val openaiApiKey: String get() = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "")
@@ -47,4 +49,6 @@ internal object Constants {
     val sparkApiSecret: String get() = AppInfo.runtimeProps.getParam(SPARK_API_SECRET_KEY, "")
 
     val sparkApiKey: String get() = AppInfo.runtimeProps.getParam(SPARK_API_KEY, "")
+
+    val sparkTemperature: Float get() = AppInfo.runtimeProps.getParam(SPARK_TEMPERATURE_KEY, 0.3f)
 }

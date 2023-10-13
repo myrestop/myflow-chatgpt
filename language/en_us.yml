@@ -1,7 +1,7 @@
 input-openai-api-key: Please Input Your OpenAI Api Key
 set-openai-api-key: Set OpenAI Api Key
-chatgpt-model: Model
-chatgpt-temperature: Temperature
+model: Model
+temperature: Temperature
 ai-assistant: AI Assistant
 spark-desk: Spark Desk
 set-as-default: Set As Default AI

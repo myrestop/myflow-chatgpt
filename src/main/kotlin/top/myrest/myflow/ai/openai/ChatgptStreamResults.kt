@@ -2,25 +2,6 @@ package top.myrest.myflow.ai.openai
 
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import cn.hutool.core.exceptions.ExceptionUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
@@ -35,7 +16,6 @@ import com.unfbx.chatgpt.entity.images.ImageVariations
 import com.unfbx.chatgpt.entity.images.Item
 import com.unfbx.chatgpt.entity.images.ResponseFormat
 import com.unfbx.chatgpt.sse.ConsoleEventSourceListener
-import kotlinx.coroutines.delay
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import org.slf4j.LoggerFactory
@@ -48,11 +28,11 @@ import top.myrest.myflow.ai.ChatHistoryDoc
 import top.myrest.myflow.ai.ChatHistoryRepo
 import top.myrest.myflow.ai.Constants
 import top.myrest.myflow.ai.ContentType
-import top.myrest.myflow.ai.renderChatResult
+import top.myrest.myflow.ai.StreamResult
+import top.myrest.myflow.ai.StreamResultListener
 import top.myrest.myflow.ai.resolveSession
 import top.myrest.myflow.ai.toResult
 import top.myrest.myflow.component.Composes
-import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.dev.DevProps
 import top.myrest.myflow.util.AsyncTasks
 import top.myrest.myflow.util.Jackson.readByJson
@@ -63,7 +43,7 @@ internal object ChatgptStreamResults {
 
     private val log = LoggerFactory.getLogger(ChatgptStreamResults::class.java)
 
-    val client = OpenAiClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
+    private val client = OpenAiClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
 
     private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
 
@@ -157,7 +137,7 @@ internal object ChatgptStreamResults {
             actionId = "",
             contentHeight = -1,
             content = {
-                listener.ChatgptStreamResult(session, doc)
+                StreamResult(session, doc, Composes.getPainter(Constants.chatgptLogo), listener)
             },
         )
     }
@@ -168,7 +148,7 @@ internal object ChatgptStreamResults {
         return Message.builder().role(role).content(content).build()
     }
 
-    private class OpenAiStreamEventListener : ConsoleEventSourceListener() {
+    private class OpenAiStreamEventListener : ConsoleEventSourceListener(), StreamResultListener {
 
         private val log = LoggerFactory.getLogger(OpenAiStreamEventListener::class.java)
 
@@ -179,6 +159,21 @@ internal object ChatgptStreamResults {
         private val closed = AtomicBoolean(false)
 
         private val failure = AtomicBoolean(false)
+
+        override fun isClosed(): Boolean = closed.get()
+
+        override fun close() = closed.set(true)
+
+        override fun hasNewText(): Boolean = hasNewText.get()
+
+        override fun consumeBuffer(): String {
+            hasNewText.set(false)
+            return textBuffer.toString()
+        }
+
+        override fun getProvider(): String = Constants.OPENAI_PROVIDER
+
+        override fun isSuccess(): Boolean = !failure.get()
 
         override fun onOpen(eventSource: EventSource, response: Response) {
             log.info("connect to openai")
@@ -218,42 +213,6 @@ internal object ChatgptStreamResults {
             closed.set(true)
             failure.set(true)
             eventSource.cancel()
-        }
-
-        @Composable
-        @Suppress("FunctionName")
-        fun ChatgptStreamResult(session: AssistantFocusedSession, doc: ChatHistoryDoc) {
-            Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) {
-                Image(
-                    painter = Composes.getPainter(Constants.chatgptLogo) ?: painterResource(AppInfo.LOGO),
-                    contentDescription = AppConsts.LOGO,
-                    modifier = Modifier.width(40.dp),
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
-                LaunchedEffect(Unit) {
-                    while (!closed.get()) {
-                        delay(50)
-                        if (hasNewText.get()) {
-                            text = textBuffer.toString()
-                            hasNewText.set(false)
-                        }
-                    }
-                    val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), textBuffer.toString())
-                    renderChatResult(session, doc, chatDoc, !failure.get())
-                }
-                DisposableEffect(Unit) {
-                    onDispose {
-                        closed.set(true)
-                    }
-                }
-                Text(
-                    text = text,
-                    color = MaterialTheme.colors.onPrimary,
-                    fontSize = MaterialTheme.typography.h6.fontSize,
-                    overflow = TextOverflow.Visible,
-                )
-            }
         }
     }
 }

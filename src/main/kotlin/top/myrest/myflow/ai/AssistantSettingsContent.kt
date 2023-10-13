@@ -88,10 +88,11 @@ internal class AssistantSettingsContent : SettingsContent {
     @Composable
     @Suppress("FunctionName")
     private fun SparkSettings() {
+        val labelWidth = 90
         SettingItemRow {
             SettingInputText(
                 label = "App ID",
-                labelWidth = 80,
+                labelWidth = labelWidth,
                 value = Constants.sparkAppId,
                 placeholder = "app id",
                 update = {
@@ -102,7 +103,7 @@ internal class AssistantSettingsContent : SettingsContent {
         SettingItemRow {
             SettingInputText(
                 label = "API Secret",
-                labelWidth = 80,
+                labelWidth = labelWidth,
                 value = Constants.sparkApiSecret,
                 placeholder = "app secret",
                 update = {
@@ -113,7 +114,7 @@ internal class AssistantSettingsContent : SettingsContent {
         SettingItemRow {
             SettingInputText(
                 label = "API Key",
-                labelWidth = 80,
+                labelWidth = labelWidth,
                 value = Constants.sparkApiKey,
                 placeholder = "app id",
                 update = {
@@ -121,15 +122,31 @@ internal class AssistantSettingsContent : SettingsContent {
                 },
             )
         }
+
+        var temperature: Float by remember { mutableStateOf(Constants.sparkTemperature) }
+        SettingSlider(
+            label = LanguageBundle.getBy(Constants.PLUGIN_ID, "temperature"),
+            labelWidth = labelWidth,
+            value = temperature,
+            valueRange = 0f..1f,
+            preContent = {
+                SettingLabelText("%.2f".format(temperature), null)
+            },
+            update = {
+                temperature = it
+                AppInfo.runtimeProps.paramMap[Constants.SPARK_TEMPERATURE_KEY] = it
+            },
+        )
     }
 
     @Composable
     @Suppress("FunctionName")
     private fun OenAiSettings() {
+        val labelWidth = 120
         SettingItemRow {
             SettingInputText(
                 label = "API Key",
-                labelWidth = 120,
+                labelWidth = labelWidth,
                 value = Constants.openaiApiKey,
                 placeholder = LanguageBundle.getBy(Constants.PLUGIN_ID, "input-openai-api-key"),
                 update = {
@@ -140,8 +157,8 @@ internal class AssistantSettingsContent : SettingsContent {
 
         var model by remember { mutableStateOf(Constants.openaiModel) }
         SettingCombo(
-            label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-model"),
-            labelWidth = 120,
+            label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "model"),
+            labelWidth = labelWidth,
             value = model,
             menus = ChatCompletion.Model.values().map { it.getName() },
             valueMapper = { it },
@@ -153,8 +170,8 @@ internal class AssistantSettingsContent : SettingsContent {
 
         var temperature: Float by remember { mutableStateOf(Constants.openaiTemperature) }
         SettingSlider(
-            label = LanguageBundle.getBy(Constants.PLUGIN_ID, "chatgpt-temperature"),
-            labelWidth = 120,
+            label = LanguageBundle.getBy(Constants.PLUGIN_ID, "temperature"),
+            labelWidth = labelWidth,
             value = temperature,
             valueRange = 0f..2f,
             preContent = {

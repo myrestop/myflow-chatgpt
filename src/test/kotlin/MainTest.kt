@@ -43,7 +43,7 @@ fun main() {
     }.configApp()
     Actions.register("settings", AppSettingsActionHandler())
 
-    DevProps.pinFuncPage(AppSettingsActionHandler().getFuncPageResults().first())
+//    DevProps.pinFuncPage(AppSettingsActionHandler().getFuncPageResults().first())
     AppStartedEvent::class.java.addSimpleListener {
         Actions.setFocusedData(Composes.mainPin, Constants.PLUGIN_ID, AppConsts.ANY_KEYWORD, AssistantActionHandler())
         DevProps.getFuncPages().forEach {

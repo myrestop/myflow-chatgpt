@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -20,6 +21,8 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.ContentScale
@@ -38,6 +42,7 @@ import cn.hutool.core.date.DateUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.util.RandomUtil
 import com.unfbx.chatgpt.entity.chat.Message
+import kotlinx.coroutines.delay
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
@@ -111,7 +116,7 @@ internal fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
 @Composable
 @Suppress("FunctionName")
 @OptIn(ExperimentalFoundationApi::class)
-private fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
+internal fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
     when (type) {
         ContentType.TEXT -> {
             SelectionContainer {
@@ -166,4 +171,53 @@ private fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
 
         else -> {}
     }
+}
+
+@Composable
+@Suppress("FunctionName")
+internal fun StreamResult(
+    session: AssistantFocusedSession,
+    doc: ChatHistoryDoc,
+    logo: Painter?,
+    listener: StreamResultListener,
+) {
+    Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) {
+        Image(
+            painter = logo ?: painterResource(AppInfo.LOGO),
+            contentDescription = AppConsts.LOGO,
+            modifier = Modifier.width(40.dp),
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
+        LaunchedEffect(Unit) {
+            while (!listener.isClosed()) {
+                delay(50)
+                if (listener.hasNewText()) {
+                    text = listener.consumeBuffer()
+                }
+            }
+            val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), listener.consumeBuffer(), listener.getProvider())
+            renderChatResult(session, doc, chatDoc, listener.isSuccess())
+        }
+        DisposableEffect(Unit) {
+            onDispose {
+                listener.close()
+            }
+        }
+        Text(
+            text = text,
+            color = MaterialTheme.colors.onPrimary,
+            fontSize = MaterialTheme.typography.h6.fontSize,
+            overflow = TextOverflow.Visible,
+        )
+    }
+}
+
+internal interface StreamResultListener {
+    fun isClosed(): Boolean
+    fun close()
+    fun hasNewText(): Boolean
+    fun consumeBuffer(): String
+    fun isSuccess(): Boolean
+    fun getProvider(): String
 }

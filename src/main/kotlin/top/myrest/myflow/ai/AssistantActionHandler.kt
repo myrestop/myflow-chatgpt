@@ -14,6 +14,7 @@ import top.myrest.myflow.action.ActionResultCallback
 import top.myrest.myflow.action.plain
 import top.myrest.myflow.action.singleCallback
 import top.myrest.myflow.ai.openai.ChatgptStreamResults
+import top.myrest.myflow.ai.spark.SparkStreamResults
 import top.myrest.myflow.component.ActionKeywordPin
 import top.myrest.myflow.component.Composes
 import top.myrest.myflow.component.SettingsContent
@@ -117,7 +118,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
                     actionCallback = {
                         if (it is String) {
                             prepareChat()
-                            Composes.actionWindowProvider?.updateActionResultList(pin, emptyList())
+                            Composes.actionWindowProvider?.updateActionResultList(pin, SparkStreamResults.getStreamChatResult(this, it).singleList())
                         }
                     },
                 ),

@@ -80,6 +80,7 @@ internal data class ChatHistoryDoc(
     val content: String,
     val value: String = "",
     val type: ContentType = ContentType.TEXT,
+    val provider: String = Constants.OPENAI_PROVIDER,
     val at: Long = System.currentTimeMillis(),
 ) : AutoIncrementDoc()
 
