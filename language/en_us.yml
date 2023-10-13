@@ -4,3 +4,4 @@ chatgpt-model: Model
 chatgpt-temperature: Temperature
 ai-assistant: AI Assistant
 spark-desk: Spark Desk
+set-as-default: Set As Default AI
