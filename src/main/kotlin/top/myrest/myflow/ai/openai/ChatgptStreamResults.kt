@@ -95,7 +95,7 @@ internal object ChatgptStreamResults {
     @Suppress("CAST_NEVER_SUCCEEDS")
     private fun getImageResult(session: AssistantFocusedSession, action: String, getImages: (AssistantFocusedSession, String) -> List<Item>): List<ActionResult> {
         AsyncTasks.execute {
-            val userDoc = action.asUserTextDoc(session)
+            val userDoc = action.asUserChatgptTextDoc(session)
             val imageDoc = try {
                 val value = getImages(session, action).map { it.b64Json }.toJsonString()
                 ChatHistoryDoc(userDoc.session, Message.Role.ASSISTANT.getName(), "", value, ContentType.IMAGES)
@@ -127,7 +127,7 @@ internal object ChatgptStreamResults {
             }
         }
 
-        val doc = action.asUserTextDoc(session)
+        val doc = action.asUserChatgptTextDoc(session)
         messages.add(doc.toMessage())
         val listener = getListener(messages, model)
 
@@ -147,9 +147,9 @@ internal object ChatgptStreamResults {
         return listener
     }
 
-    private fun String.asUserTextDoc(session: AssistantFocusedSession) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)
+    fun String.asUserChatgptTextDoc(session: AssistantFocusedSession?) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)
 
-    private fun ChatHistoryDoc.toMessage(): Message {
+    fun ChatHistoryDoc.toMessage(): Message {
         return Message.builder().role(role).content(content).build()
     }
 
@@ -175,6 +175,8 @@ internal object ChatgptStreamResults {
             hasNewText.set(false)
             return textBuffer.toString()
         }
+
+        override fun getRole(): String = Message.Role.ASSISTANT.getName()
 
         override fun getProvider(): String = Constants.OPENAI_PROVIDER
 

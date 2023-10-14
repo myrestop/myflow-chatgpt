@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.onClick
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -49,16 +48,19 @@ import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.component.Composes
 import top.myrest.myflow.component.MyHoverable
 import top.myrest.myflow.component.MyMarkdownText
+import top.myrest.myflow.component.logoSize
 import top.myrest.myflow.constant.AppConsts
 import top.myrest.myflow.util.Jackson.readByJsonArray
 
 private const val MIN_SIZE = 36
 
-internal fun resolveSession(session: AssistantFocusedSession): String {
-    for (result in session.results.get()) {
-        val finalResult = result.result
-        if (finalResult is ChatHistoryDoc && finalResult.session.isNotBlank()) {
-            return finalResult.session
+internal fun resolveSession(session: AssistantFocusedSession?): String {
+    if (session != null) {
+        for (result in session.results.get()) {
+            val finalResult = result.result
+            if (finalResult is ChatHistoryDoc && finalResult.session.isNotBlank()) {
+                return finalResult.session
+            }
         }
     }
     val length = RandomUtil.randomInt(5, 10)
@@ -119,24 +121,22 @@ internal fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
 internal fun ChatHistoryDoc.ChatResponseViewer(isUser: Boolean) {
     when (type) {
         ContentType.TEXT -> {
-            SelectionContainer {
-                if (isUser) {
-                    Text(
-                        text = content,
-                        color = MaterialTheme.colors.onSecondary,
-                        fontSize = MaterialTheme.typography.h6.fontSize,
-                        overflow = TextOverflow.Visible,
-                        fontWeight = FontWeight.Bold,
-                    )
-                } else {
-                    MaterialTheme(
-                        colors = MaterialTheme.colors,
-                        typography = MaterialTheme.typography.copy(
-                            body1 = MaterialTheme.typography.h6,
-                        ),
-                    ) {
-                        MyMarkdownText(content)
-                    }
+            if (isUser) {
+                Text(
+                    text = content,
+                    color = MaterialTheme.colors.onSecondary,
+                    fontSize = MaterialTheme.typography.h6.fontSize,
+                    overflow = TextOverflow.Visible,
+                    fontWeight = FontWeight.Bold,
+                )
+            } else {
+                MaterialTheme(
+                    colors = MaterialTheme.colors,
+                    typography = MaterialTheme.typography.copy(
+                        body1 = MaterialTheme.typography.h6,
+                    ),
+                ) {
+                    MyMarkdownText(content)
                 }
             }
         }
@@ -185,7 +185,7 @@ internal fun StreamResult(
         Image(
             painter = logo ?: painterResource(AppInfo.LOGO),
             contentDescription = AppConsts.LOGO,
-            modifier = Modifier.width(40.dp),
+            modifier = Modifier.width(logoSize.dp),
         )
         Spacer(modifier = Modifier.width(16.dp))
         var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
@@ -196,7 +196,7 @@ internal fun StreamResult(
                     text = listener.consumeBuffer()
                 }
             }
-            val chatDoc = ChatHistoryDoc(doc.session, Message.Role.ASSISTANT.getName(), listener.consumeBuffer(), listener.getProvider())
+            val chatDoc = ChatHistoryDoc(doc.session, listener.getRole(), listener.consumeBuffer(), listener.getProvider())
             renderChatResult(session, doc, chatDoc, listener.isSuccess())
         }
         DisposableEffect(Unit) {
@@ -220,4 +220,5 @@ internal interface StreamResultListener {
     fun consumeBuffer(): String
     fun isSuccess(): Boolean
     fun getProvider(): String
+    fun getRole(): String
 }

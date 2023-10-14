@@ -1,7 +1,7 @@
 package top.myrest.myflow.ai
 
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.SwingUtilities
 import cn.hutool.core.io.FileUtil
@@ -28,7 +28,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
 
     var chatHistoryWindow: ChatHistoryWindow? = ChatHistoryWindow(this, pin)
 
-    private val inactive = AtomicBoolean(true)
+    private val activeAt = System.currentTimeMillis() + Duration.ofSeconds(1).toMillis()
 
     private val providers = mapOf<String, (MutableList<ActionResult>, ActionResult, String) -> Unit>(
         Constants.OPENAI_PROVIDER to { list, result, action -> addOpenaiResults(list, result, action) },
@@ -39,7 +39,6 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
         SwingUtilities.invokeLater {
             chatHistoryWindow?.attach()
             Composes.actionWindowProvider?.setAction(pin, "", false)
-            inactive.set(false)
         }
     }
 
@@ -58,7 +57,8 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
     }
 
     override fun queryAction(action: String): List<ActionResult> {
-        if (inactive.get()) {
+        if (System.currentTimeMillis() < activeAt) {
+            Composes.actionWindowProvider?.setAction(pin, "")
             return emptyList()
         }
         if (action.isBlank()) {

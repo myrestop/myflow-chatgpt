@@ -39,7 +39,7 @@ internal object SparkStreamResults {
             }
         }
 
-        val doc = action.asUserTextDoc(session)
+        val doc = action.asUserSparkTextDoc(session)
         texts.add(doc.toText())
         val listener = getListener(texts)
 
@@ -62,9 +62,9 @@ internal object SparkStreamResults {
         return listener
     }
 
-    private fun String.asUserTextDoc(session: AssistantFocusedSession) = ChatHistoryDoc(resolveSession(session), Text.Role.USER.getName(), this, Constants.SPARK_PROVIDER)
+    fun String.asUserSparkTextDoc(session: AssistantFocusedSession?) = ChatHistoryDoc(resolveSession(session), Text.Role.USER.getName(), this, Constants.SPARK_PROVIDER)
 
-    private fun ChatHistoryDoc.toText(): Text {
+    fun ChatHistoryDoc.toText(): Text {
         return Text.builder().role(role).content(content).build()
     }
 
@@ -87,6 +87,8 @@ internal object SparkStreamResults {
         override fun hasNewText(): Boolean = hasNewText.get()
 
         override fun getProvider(): String = Constants.SPARK_PROVIDER
+
+        override fun getRole(): String = Text.Role.ASSISTANT.getName()
 
         override fun consumeBuffer(): String {
             hasNewText.set(false)
