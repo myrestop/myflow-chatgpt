@@ -129,9 +129,7 @@ internal object ChatgptStreamResults {
 
         val doc = action.asUserTextDoc(session)
         messages.add(doc.toMessage())
-        val completion = ChatCompletion.builder().temperature(Constants.openaiTemperature.toDouble()).model(model).messages(messages).build()
-        val listener = OpenAiStreamEventListener()
-        streamClient.streamChatCompletion(completion, listener)
+        val listener = getListener(messages, model)
 
         return customContentResult(
             actionId = "",
@@ -140,6 +138,13 @@ internal object ChatgptStreamResults {
                 StreamResult(session, doc, Composes.getPainter(Constants.chatgptLogo), listener)
             },
         )
+    }
+
+    fun getListener(messages: List<Message>, model: String): StreamResultListener {
+        val completion = ChatCompletion.builder().temperature(Constants.openaiTemperature.toDouble()).model(model).messages(messages).build()
+        val listener = OpenAiStreamEventListener()
+        streamClient.streamChatCompletion(completion, listener)
+        return listener
     }
 
     private fun String.asUserTextDoc(session: AssistantFocusedSession) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)

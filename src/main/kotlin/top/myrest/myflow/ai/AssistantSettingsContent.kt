@@ -71,11 +71,7 @@ internal class AssistantSettingsContent : SettingsContent {
                     checked = currentIsDefault,
                     update = {
                         currentIsDefault = it
-                        if (it) {
-                            AppInfo.runtimeProps.paramMap[Constants.PROVIDER_KEY] = provider
-                        } else {
-                            AppInfo.runtimeProps.paramMap.remove(Constants.PROVIDER_KEY)
-                        }
+                        AppInfo.runtimeProps.paramMap[Constants.PROVIDER_KEY] = if (it) provider else ""
                     },
                 )
                 when (provider) {

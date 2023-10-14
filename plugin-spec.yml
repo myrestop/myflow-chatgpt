@@ -27,6 +27,7 @@ languages:
 actions:
   - keywords:
       - '/'
+      - '*'
     logo: ./logos/robot.png
     handler: top.myrest.myflow.ai.AssistantActionHandler
     name-bundle-id: ai-assistant

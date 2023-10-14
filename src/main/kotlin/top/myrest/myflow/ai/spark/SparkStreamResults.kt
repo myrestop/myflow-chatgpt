@@ -31,9 +31,6 @@ internal object SparkStreamResults {
     private val client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WS_V2_1).appid(Constants.sparkAppId).apiKey(Constants.sparkApiKey).apiSecret(Constants.sparkApiSecret).build()
 
     fun getStreamChatResult(session: AssistantFocusedSession, action: String): ActionResult {
-        val header = InHeader.builder().appid(Constants.sparkAppId).build()
-        val parameter = Parameter.builder().chat(Chat.builder().domain("generalv2").maxTokens(2048).temperature(Constants.sparkTemperature.toDouble()).build()).build()
-
         val texts = mutableListOf<Text>()
         session.results.get().forEach {
             val result = it.result
@@ -44,10 +41,7 @@ internal object SparkStreamResults {
 
         val doc = action.asUserTextDoc(session)
         texts.add(doc.toText())
-        val payload = InPayload.builder().message(Message.builder().text(texts).build()).build()
-        val request = AIChatRequest.builder().header(header).parameter(parameter).payload(payload).build()
-        val listener = SparkStreamChatListener(request)
-        client.chat(listener)
+        val listener = getListener(texts)
 
         return customContentResult(
             actionId = "",
@@ -56,6 +50,16 @@ internal object SparkStreamResults {
                 StreamResult(session, doc, Composes.getPainter(Constants.sparkLogo), listener)
             },
         )
+    }
+
+    fun getListener(texts: List<Text>): StreamResultListener {
+        val header = InHeader.builder().appid(Constants.sparkAppId).build()
+        val parameter = Parameter.builder().chat(Chat.builder().domain("generalv2").maxTokens(2048).temperature(Constants.sparkTemperature.toDouble()).build()).build()
+        val payload = InPayload.builder().message(Message.builder().text(texts).build()).build()
+        val request = AIChatRequest.builder().header(header).parameter(parameter).payload(payload).build()
+        val listener = SparkStreamChatListener(request)
+        client.chat(listener)
+        return listener
     }
 
     private fun String.asUserTextDoc(session: AssistantFocusedSession) = ChatHistoryDoc(resolveSession(session), Text.Role.USER.getName(), this, Constants.SPARK_PROVIDER)
