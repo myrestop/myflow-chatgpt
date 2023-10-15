@@ -2,6 +2,6 @@ input-openai-api-key: Please Input Your OpenAI Api Key
 set-openai-api-key: Set OpenAI Api Key
 model: Model
 temperature: Temperature
-ai-assistant: AI Assistant
+ai-assistant: Ai Assistant
 spark-desk: Spark Desk
 set-as-default: Set As Default AI

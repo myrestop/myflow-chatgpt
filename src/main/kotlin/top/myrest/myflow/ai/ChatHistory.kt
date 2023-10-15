@@ -149,7 +149,7 @@ internal data class ChatHistoryData(val firstUser: ChatHistoryDoc, val list: Lis
     }
 }
 
-internal class ChatHistoryWindow(private val session: AssistantFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(CornerType.LEFT_SIDE, 200, null) {
+internal class ChatHistoryWindow(private val session: AssistantFocusedSession, private val pin: ActionKeywordPin) : AttachedWindow(pin.getPinId(), CornerType.LEFT_SIDE, 200, null) {
 
     lateinit var updateChatList: (List<ChatHistoryDoc>) -> Unit
 
@@ -304,9 +304,9 @@ internal class ChatHistoryWindow(private val session: AssistantFocusedSession, p
         )
     }
 
-    override fun onActionWindowSizeUpdate(width: Int, height: Int) {
+    override fun onWindowSizeUpdate(width: Int, height: Int) {
         if (dialog.isVisible) {
-            super.onActionWindowSizeUpdate(width, height)
+            super.onWindowSizeUpdate(width, height)
             dialog.setSize(dialog.width, max(initHeight ?: 0, height))
         }
     }

@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.swing.SwingUtilities
 import cn.hutool.core.io.FileUtil
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
+import org.slf4j.LoggerFactory
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionFocusedSession
 import top.myrest.myflow.action.ActionResult
@@ -22,6 +23,8 @@ import top.myrest.myflow.util.singleList
 
 internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSession(pin) {
 
+    private val log = LoggerFactory.getLogger(AssistantFocusedSession::class.java)
+
     internal val results = AtomicReference(emptyList<ActionResult>())
 
     private val sendMessageTip = AppInfo.currLanguageBundle.shared.send + AppInfo.currLanguageBundle.wordSep + AppInfo.currLanguageBundle.shared.message
@@ -36,6 +39,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
     )
 
     init {
+        log.info("enter ai assistant focused mode: {}", pin.getPinId())
         SwingUtilities.invokeLater {
             chatHistoryWindow?.attach()
             Composes.actionWindowProvider?.setAction(pin, "", false)
@@ -45,6 +49,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
     override fun exitFocusMode() {
         chatHistoryWindow?.dispose()
         chatHistoryWindow = null
+        log.info("exit ai assistant focused mode: {}", pin.getPinId())
     }
 
     override fun getWorkDir(): File = FileUtil.getUserHomeDir()
