@@ -13,6 +13,7 @@ import com.unfbx.sparkdesk.entity.Parameter
 import com.unfbx.sparkdesk.entity.Text
 import com.unfbx.sparkdesk.entity.Usage
 import com.unfbx.sparkdesk.listener.ChatListener
+import okhttp3.WebSocket
 import org.slf4j.LoggerFactory
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
@@ -28,7 +29,7 @@ import top.myrest.myflow.util.Jackson.toJsonString
 
 internal object SparkStreamResults {
 
-    private val client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WS_V2_1).appid(Constants.sparkAppId).apiKey(Constants.sparkApiKey).apiSecret(Constants.sparkApiSecret).build()
+    val client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WSS_V2_1).appid(Constants.sparkAppId).apiKey(Constants.sparkApiKey).apiSecret(Constants.sparkApiSecret).build()
 
     fun getStreamChatResult(session: AssistantFocusedSession, action: String): ActionResult {
         val texts = mutableListOf<Text>()
@@ -58,7 +59,7 @@ internal object SparkStreamResults {
         val payload = InPayload.builder().message(Message.builder().text(texts).build()).build()
         val request = AIChatRequest.builder().header(header).parameter(parameter).payload(payload).build()
         val listener = SparkStreamChatListener(request)
-        client.chat(listener)
+        listener.socket = client.chat(listener)
         return listener
     }
 
@@ -80,9 +81,15 @@ internal object SparkStreamResults {
 
         private val failure = AtomicBoolean(false)
 
+        lateinit var socket: WebSocket
+
         override fun isClosed(): Boolean = closed.get()
 
-        override fun close() = closed.set(true)
+        override fun close() {
+            closed.set(true)
+            socket.cancel()
+            log.info("close spark websocket connection")
+        }
 
         override fun hasNewText(): Boolean = hasNewText.get()
 
@@ -103,6 +110,7 @@ internal object SparkStreamResults {
             hasNewText.set(true)
             closed.set(true)
             failure.set(true)
+            socket.cancel()
         }
 
         override fun onChatOutput(response: AIChatResponse) {
