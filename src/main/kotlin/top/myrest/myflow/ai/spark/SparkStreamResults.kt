@@ -75,15 +75,13 @@ internal object SparkStreamResults {
 
         private val textBuffer = StringBuffer()
 
-        private val hasNewText = AtomicBoolean(false)
-
         private val closed = AtomicBoolean(false)
 
         private val failure = AtomicBoolean(false)
 
         lateinit var socket: WebSocket
 
-        override fun isClosed(): Boolean = closed.get()
+        private var updater: ((String, Boolean) -> Unit)? = null
 
         override fun close() {
             closed.set(true)
@@ -91,26 +89,19 @@ internal object SparkStreamResults {
             log.info("close spark websocket connection")
         }
 
-        override fun hasNewText(): Boolean = hasNewText.get()
-
         override fun getProvider(): String = Constants.SPARK_PROVIDER
 
         override fun getRole(): String = Text.Role.ASSISTANT.getName()
-
-        override fun consumeBuffer(): String {
-            hasNewText.set(false)
-            return textBuffer.toString()
-        }
 
         override fun isSuccess(): Boolean = !failure.get()
 
         override fun onChatError(response: AIChatResponse) {
             log.error("open spark chat session error: {}", response)
             textBuffer.append(response.toJsonString(true))
-            hasNewText.set(true)
             closed.set(true)
             failure.set(true)
             socket.cancel()
+            updater?.invoke(textBuffer.toString(), false)
         }
 
         override fun onChatOutput(response: AIChatResponse) {
@@ -123,12 +114,17 @@ internal object SparkStreamResults {
             response.payload.choices.text.forEach {
                 textBuffer.append(it.content)
             }
-            hasNewText.set(true)
+            updater?.invoke(textBuffer.toString(), false)
+        }
+
+        override fun updateText(updater: (text: String, finished: Boolean) -> Unit) {
+            this.updater = updater
         }
 
         override fun onChatEnd() {
             log.info("close spark chat session")
             closed.set(true)
+            updater?.invoke(textBuffer.toString(), true)
         }
 
         override fun onChatToken(usage: Usage) {

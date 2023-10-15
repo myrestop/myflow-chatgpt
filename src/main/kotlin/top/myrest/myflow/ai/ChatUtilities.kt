@@ -41,7 +41,6 @@ import cn.hutool.core.date.DateUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.util.RandomUtil
 import com.unfbx.chatgpt.entity.chat.Message
-import kotlinx.coroutines.delay
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
@@ -190,14 +189,13 @@ internal fun StreamResult(
         Spacer(modifier = Modifier.width(16.dp))
         var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
         LaunchedEffect(Unit) {
-            while (!listener.isClosed()) {
-                delay(50)
-                if (listener.hasNewText()) {
-                    text = listener.consumeBuffer()
+            listener.updateText { str, b ->
+                text = str
+                if (b) {
+                    val chatDoc = ChatHistoryDoc(doc.session, listener.getRole(), str, listener.getProvider())
+                    renderChatResult(session, doc, chatDoc, listener.isSuccess())
                 }
             }
-            val chatDoc = ChatHistoryDoc(doc.session, listener.getRole(), listener.consumeBuffer(), listener.getProvider())
-            renderChatResult(session, doc, chatDoc, listener.isSuccess())
         }
         DisposableEffect(Unit) {
             onDispose {
@@ -214,10 +212,8 @@ internal fun StreamResult(
 }
 
 internal interface StreamResultListener {
-    fun isClosed(): Boolean
     fun close()
-    fun hasNewText(): Boolean
-    fun consumeBuffer(): String
+    fun updateText(updater: (text: String, finished: Boolean) -> Unit)
     fun isSuccess(): Boolean
     fun getProvider(): String
     fun getRole(): String

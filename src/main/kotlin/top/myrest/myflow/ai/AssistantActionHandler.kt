@@ -1,5 +1,6 @@
 package top.myrest.myflow.ai
 
+import java.util.concurrent.atomic.AtomicReference
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionFocusedKeywordHandler
 import top.myrest.myflow.action.ActionFocusedSession
@@ -47,6 +46,8 @@ import top.myrest.myflow.util.singleList
 
 class AssistantActionHandler : ActionFocusedKeywordHandler() {
 
+    private val ref = AtomicReference<Pair<ChatHistoryDoc, StreamResultListener>>(null)
+
     override fun getCustomizeSettingContent(): SettingsContent {
         return AssistantSettingsContent()
     }
@@ -56,8 +57,9 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
     }
 
     override fun queryAction(param: ActionParam): List<ActionResult> {
-        var action = param.originAction
+        var action = param.originAction.trimStart()
         Plugins.getKeywordProps(javaClassName)?.getUserKeywords()?.forEach {
+            action = action.removePrefix(it)
             if (Actions.isSpecialKeyword(it)) {
                 action = action.removeSuffix(it)
             }
@@ -66,7 +68,8 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
             return emptyList()
         }
 
-        val (userDoc, listener) = when (Constants.provider) {
+        action = action.trimStart()
+        val pair = when (Constants.provider) {
             Constants.OPENAI_PROVIDER -> {
                 val userDoc = action.asUserChatgptTextDoc(null)
                 val message = userDoc.toMessage()
@@ -82,11 +85,27 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
             else -> return emptyList()
         }
 
+        ref.get()?.second?.close()
+        ref.set(pair)
+
         return listOf(
             customContentResult(
                 actionId = "",
                 contentHeight = -1,
                 content = {
+                    var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
+                    var finished by remember { mutableStateOf(false) }
+                    ref.get().second.updateText { str, b ->
+                        text = str
+                        finished = false
+                        if (b) {
+                            val userDoc = ref.get().first
+                            val listener = ref.get().second
+                            val chatDoc = ChatHistoryDoc(userDoc.session, listener.getRole(), str, listener.getProvider())
+                            ChatHistoryRepo.addChat(userDoc, chatDoc)
+                            finished = true
+                        }
+                    }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                         Image(
                             painter = Composes.getPainter(Constants.robotLogo) ?: painterResource(AppInfo.LOGO),
@@ -94,25 +113,13 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                             modifier = Modifier.width(logoSize.dp),
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
-                        var render by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) {
-                            while (!listener.isClosed()) {
-                                delay(50)
-                                if (listener.hasNewText()) {
-                                    text = listener.consumeBuffer()
-                                }
-                            }
-                            val chatDoc = ChatHistoryDoc(userDoc.session, listener.getRole(), listener.consumeBuffer(), listener.getProvider())
-                            ChatHistoryRepo.addChat(userDoc, chatDoc)
-                            render = true
-                        }
                         DisposableEffect(Unit) {
                             onDispose {
-                                listener.close()
+                                ref.get()?.second?.close()
+                                ref.set(null)
                             }
                         }
-                        if (render) {
+                        if (finished) {
                             Column(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = logoSize.dp),
                                 verticalArrangement = Arrangement.Center,

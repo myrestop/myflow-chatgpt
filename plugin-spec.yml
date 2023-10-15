@@ -28,5 +28,6 @@ actions:
   - keywords:
       - '/'
     logo: ./logos/robot.png
+    pin-name: Assistant
     handler: top.myrest.myflow.ai.AssistantActionHandler
     name-bundle-id: ai-assistant

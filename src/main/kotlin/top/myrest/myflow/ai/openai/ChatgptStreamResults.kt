@@ -159,22 +159,13 @@ internal object ChatgptStreamResults {
 
         private val textBuffer = StringBuffer()
 
-        private val hasNewText = AtomicBoolean(false)
-
         private val closed = AtomicBoolean(false)
 
         private val failure = AtomicBoolean(false)
 
-        override fun isClosed(): Boolean = closed.get()
-
         override fun close() = closed.set(true)
 
-        override fun hasNewText(): Boolean = hasNewText.get()
-
-        override fun consumeBuffer(): String {
-            hasNewText.set(false)
-            return textBuffer.toString()
-        }
+        private var updater: ((String, Boolean) -> Unit)? = null
 
         override fun getRole(): String = Message.Role.ASSISTANT.getName()
 
@@ -204,22 +195,27 @@ internal object ChatgptStreamResults {
                     textBuffer.append(it.delta.content)
                 }
             }
-            hasNewText.set(true)
+            updater?.invoke(textBuffer.toString(), false)
+        }
+
+        override fun updateText(updater: (text: String, finished: Boolean) -> Unit) {
+            this.updater = updater
         }
 
         override fun onClosed(eventSource: EventSource) {
             log.info("close openai connection")
             closed.set(true)
+            updater?.invoke(textBuffer.toString(), true)
         }
 
         override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
             val message: String = response?.body?.string() ?: response?.toString() ?: ""
             log.error("openai sse connection error: {}", message, t)
             textBuffer.append(message)
-            hasNewText.set(true)
             closed.set(true)
             failure.set(true)
             eventSource.cancel()
+            updater?.invoke(textBuffer.toString(), false)
         }
     }
 }
