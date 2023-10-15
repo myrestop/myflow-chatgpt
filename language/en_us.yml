@@ -5,3 +5,5 @@ temperature: Temperature
 ai-assistant: Ai Assistant
 spark-desk: Spark Desk
 set-as-default: Set As Default AI
+source-language: Source Language
+target-language: Target Language

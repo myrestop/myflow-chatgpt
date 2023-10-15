@@ -16,11 +16,15 @@ import io.ktor.utils.io.core.toByteArray
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 import top.myrest.myflow.ai.Constants
+import top.myrest.myflow.util.Jackson
 import top.myrest.myflow.util.Jackson.toJsonString
 
 
 internal object SparkTranslations {
+
+    private val log = LoggerFactory.getLogger(SparkTranslations::class.java)
 
     private val urlBuilder = UrlBuilder().setScheme("https").setHost("ntrans.xfyun.cn").setPath(UrlPath().add("/v2").add("/ots"))
 
@@ -43,9 +47,17 @@ internal object SparkTranslations {
         headers.forEach { (k, v) ->
             request.addHeader(k, v)
         }
+
         val response = SparkStreamResults.client.okHttpClient.newCall(request.build()).execute()
-        println(response.body?.string())
-        return ""
+        val responseBody = response.body?.string()
+        if (!response.isSuccessful) {
+            log.error("get translate error: {}", response.toString())
+            return ""
+        }
+
+        log.info("response body: {}", responseBody)
+        val node = Jackson.jsonMapper.readTree(responseBody)
+        return node.at("/data/result/trans_result/dst").asText()
     }
 
     private fun buildBody(text: String): String {

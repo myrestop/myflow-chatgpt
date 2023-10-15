@@ -1,7 +1,7 @@
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.Actions
-import top.myrest.myflow.ai.AssistantSettingsContent
 import top.myrest.myflow.ai.Constants
+import top.myrest.myflow.ai.spark.TranslateSettingsContent
 import top.myrest.myflow.baseimpl.App
 import top.myrest.myflow.baseimpl.FlowApp
 import top.myrest.myflow.baseimpl.Replacement
@@ -28,7 +28,7 @@ fun main() {
                     key = Constants.PLUGIN_ID,
                     name = name,
                     logo = "./logos/robot.png",
-                    content = AssistantSettingsContent(),
+                    content = TranslateSettingsContent(),
                 )
             )
             return list
@@ -41,7 +41,7 @@ fun main() {
     }.configApp()
     Actions.register("settings", AppSettingsActionHandler())
 
-//    DevProps.pinFuncPage(AppSettingsActionHandler().getFuncPageResults().first())
+    DevProps.pinFuncPage(AppSettingsActionHandler().getFuncPageResults().first())
     AppStartedEvent::class.java.addSimpleListener {
 //        Actions.setFocusedData(Composes.mainPin, Constants.PLUGIN_ID, AppConsts.ANY_KEYWORD, AssistantActionHandler())
         DevProps.getFuncPages().forEach {

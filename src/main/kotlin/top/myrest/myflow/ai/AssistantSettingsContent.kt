@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import top.myrest.myflow.AppInfo
+import top.myrest.myflow.ai.spark.SparkSettings
 import top.myrest.myflow.component.FuncPageScope
 import top.myrest.myflow.component.MyHoverable
 import top.myrest.myflow.component.SettingCheckBox
@@ -80,60 +81,6 @@ internal class AssistantSettingsContent : SettingsContent {
                 }
             }
         }
-
-    @Composable
-    @Suppress("FunctionName")
-    private fun SparkSettings() {
-        val labelWidth = 90
-        SettingItemRow {
-            SettingInputText(
-                label = "App ID",
-                labelWidth = labelWidth,
-                value = Constants.sparkAppId,
-                placeholder = "app id",
-                update = {
-                    AppInfo.runtimeProps.paramMap[Constants.SPARK_APP_ID_KEY] = it
-                },
-            )
-        }
-        SettingItemRow {
-            SettingInputText(
-                label = "API Secret",
-                labelWidth = labelWidth,
-                value = Constants.sparkApiSecret,
-                placeholder = "app secret",
-                update = {
-                    AppInfo.runtimeProps.paramMap[Constants.SPARK_API_SECRET_KEY] = it
-                },
-            )
-        }
-        SettingItemRow {
-            SettingInputText(
-                label = "API Key",
-                labelWidth = labelWidth,
-                value = Constants.sparkApiKey,
-                placeholder = "app id",
-                update = {
-                    AppInfo.runtimeProps.paramMap[Constants.SPARK_API_KEY] = it
-                },
-            )
-        }
-
-        var temperature: Float by remember { mutableStateOf(Constants.sparkTemperature) }
-        SettingSlider(
-            label = LanguageBundle.getBy(Constants.PLUGIN_ID, "temperature"),
-            labelWidth = labelWidth,
-            value = temperature,
-            valueRange = 0f..1f,
-            preContent = {
-                SettingLabelText("%.2f".format(temperature), null)
-            },
-            update = {
-                temperature = it
-                AppInfo.runtimeProps.paramMap[Constants.SPARK_TEMPERATURE_KEY] = it
-            },
-        )
-    }
 
     @Composable
     @Suppress("FunctionName")

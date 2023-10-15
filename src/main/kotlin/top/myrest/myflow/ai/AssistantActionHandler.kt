@@ -26,7 +26,6 @@ import top.myrest.myflow.action.ActionFocusedKeywordHandler
 import top.myrest.myflow.action.ActionFocusedSession
 import top.myrest.myflow.action.ActionParam
 import top.myrest.myflow.action.ActionResult
-import top.myrest.myflow.action.Actions
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.ai.openai.ChatgptStreamResults
 import top.myrest.myflow.ai.openai.ChatgptStreamResults.asUserChatgptTextDoc
@@ -40,8 +39,6 @@ import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.component.SettingsContent
 import top.myrest.myflow.component.logoSize
 import top.myrest.myflow.constant.AppConsts
-import top.myrest.myflow.plugin.Plugins
-import top.myrest.myflow.util.javaClassName
 import top.myrest.myflow.util.singleList
 
 class AssistantActionHandler : ActionFocusedKeywordHandler() {
@@ -57,18 +54,15 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
     }
 
     override fun queryAction(param: ActionParam): List<ActionResult> {
-        var action = param.originAction.trimStart()
-        Plugins.getKeywordProps(javaClassName)?.getUserKeywords()?.forEach {
-            action = action.removePrefix(it)
-            if (Actions.isSpecialKeyword(it)) {
-                action = action.removeSuffix(it)
-            }
+        var action = param.originAction.trim()
+        if (param.keyword.isNotBlank() && !param.isAnyKeyword()) {
+            action = action.removePrefix(param.keyword).removeSuffix(param.keyword)
         }
         if (action.isBlank() || action.last().isWhitespace()) {
             return emptyList()
         }
 
-        action = action.trimStart()
+        action = action.trim()
         val pair = when (Constants.provider) {
             Constants.OPENAI_PROVIDER -> {
                 val userDoc = action.asUserChatgptTextDoc(null)

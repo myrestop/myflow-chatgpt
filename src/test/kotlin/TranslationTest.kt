@@ -5,5 +5,5 @@ import top.myrest.myflow.config.ConfigProps
 fun main() {
     enableDevEnv()
     ConfigProps.load()
-    SparkTranslations.translate("中国")
+    println(SparkTranslations.translate("中国"))
 }
