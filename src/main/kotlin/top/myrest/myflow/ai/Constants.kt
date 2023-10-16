@@ -2,6 +2,7 @@ package top.myrest.myflow.ai
 
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import top.myrest.myflow.AppInfo
+import top.myrest.myflow.ai.spark.SparkLanguageType
 import top.myrest.myflow.component.Composes
 
 internal object Constants {
@@ -36,6 +37,10 @@ internal object Constants {
 
     const val SPARK_TEMPERATURE_KEY = "$PLUGIN_ID.spark.Temperature"
 
+    const val SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY = "spark.translation.SourceLanguage"
+
+    const val SPARK_TRANSLATION_TARGET_LANGUAGE_KEY = "spark.translation.TargetLanguage"
+
     val provider: String get() = AppInfo.runtimeProps.getParam(PROVIDER_KEY, OPENAI_PROVIDER)
 
     val openaiApiKey: String get() = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "")
@@ -51,4 +56,8 @@ internal object Constants {
     val sparkApiKey: String get() = AppInfo.runtimeProps.getParam(SPARK_API_KEY, "")
 
     val sparkTemperature: Float get() = AppInfo.runtimeProps.getParam(SPARK_TEMPERATURE_KEY, 0.3f)
+
+    val sparkTranslationSourceLanguage: String get() = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY, SparkLanguageType.EN_US.name)
+
+    val sparkTranslationTargetLanguage: String get() = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_TARGET_LANGUAGE_KEY, SparkLanguageType.ZH_CN.name)
 }

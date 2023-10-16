@@ -2,7 +2,6 @@ id: top.myrest.myflow.ai
 name: Ai Assistant
 names:
   ZH_CN: 智能助手
-  ZH_TW: 智能助手
 entry: ./myflow-chatgpt.jar
 version: 1.0.0
 logo: ./logos/robot.png
@@ -19,6 +18,9 @@ platforms:
   - WINDOWS
   - MACOS
   - LINUX
+translator:
+  name-bundle-id: spark-translate
+  translator: top.myrest.myflow.ai.spark.SparkTranslator
 actions:
   - keywords:
       - '/'
@@ -26,3 +28,11 @@ actions:
     pin-name: Assistant
     handler: top.myrest.myflow.ai.AssistantActionHandler
     name-bundle-id: ai-assistant:remove-whitespace
+    description-bundle-id: ai-assistant:lower
+  - keywords:
+      - translate
+    logo: ./logos/translate.png
+    pin-name: Translate
+    handler: top.myrest.myflow.ai.spark.SparkTranslateActionHandler
+    name-bundle-id: spark-translate:remove-whitespace
+    description-bundle-id: spark-translate:lower
