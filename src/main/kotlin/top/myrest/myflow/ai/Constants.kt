@@ -17,47 +17,88 @@ internal object Constants {
 
     val sparkLogo = Composes.resolveLogo(PLUGIN_ID, null, "./logos/spark.png").first
 
-    const val PROVIDER_KEY = "$PLUGIN_ID.Provider"
-
-    const val OPEN_API_KEY = "$PLUGIN_ID.openai.ApiKey"
-
-    const val OPEN_TEMPERATURE_KEY = "$PLUGIN_ID.chatgpt.Temperature"
-
-    const val OPEN_MODEL_KEY = "$PLUGIN_ID.chatgpt.Model"
-
     const val OPENAI_PROVIDER = "OpenAI"
 
     const val SPARK_PROVIDER = "Spark"
 
-    const val SPARK_APP_ID_KEY = "$PLUGIN_ID.spark.AppId"
+    private const val PROVIDER_KEY = "$PLUGIN_ID.Provider"
 
-    const val SPARK_API_SECRET_KEY = "$PLUGIN_ID.spark.ApiSecret"
+    private const val OPEN_API_KEY = "$PLUGIN_ID.openai.ApiKey"
 
-    const val SPARK_API_KEY = "$PLUGIN_ID.spark.ApiKey"
+    private const val OPEN_TEMPERATURE_KEY = "$PLUGIN_ID.chatgpt.Temperature"
 
-    const val SPARK_TEMPERATURE_KEY = "$PLUGIN_ID.spark.Temperature"
+    private const val OPEN_MODEL_KEY = "$PLUGIN_ID.chatgpt.Model"
 
-    const val SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY = "spark.translation.SourceLanguage"
+    private const val SPARK_APP_ID_KEY = "$PLUGIN_ID.spark.AppId"
 
-    const val SPARK_TRANSLATION_TARGET_LANGUAGE_KEY = "spark.translation.TargetLanguage"
+    private const val SPARK_API_SECRET_KEY = "$PLUGIN_ID.spark.ApiSecret"
 
-    val provider: String get() = AppInfo.runtimeProps.getParam(PROVIDER_KEY, OPENAI_PROVIDER)
+    private const val SPARK_API_KEY = "$PLUGIN_ID.spark.ApiKey"
 
-    val openaiApiKey: String get() = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "")
+    private const val SPARK_TEMPERATURE_KEY = "$PLUGIN_ID.spark.Temperature"
 
-    val openaiTemperature: Float get() = AppInfo.runtimeProps.getParam(OPEN_TEMPERATURE_KEY, 0.6f)
+    private const val SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY = "spark.translation.SourceLanguage"
 
-    val openaiModel: String get() = AppInfo.runtimeProps.getParam(OPEN_MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
+    private const val SPARK_TRANSLATION_TARGET_LANGUAGE_KEY = "spark.translation.TargetLanguage"
 
-    val sparkAppId: String get() = AppInfo.runtimeProps.getParam(SPARK_APP_ID_KEY, "")
+    var provider: String = AppInfo.runtimeProps.getParam(PROVIDER_KEY, OPENAI_PROVIDER)
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[PROVIDER_KEY] = value
+        }
 
-    val sparkApiSecret: String get() = AppInfo.runtimeProps.getParam(SPARK_API_SECRET_KEY, "")
+    var openaiApiKey: String = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "").decrypt()
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[OPEN_API_KEY] = value.encrypt()
+        }
 
-    val sparkApiKey: String get() = AppInfo.runtimeProps.getParam(SPARK_API_KEY, "")
+    var openaiTemperature: Float = AppInfo.runtimeProps.getParam(OPEN_TEMPERATURE_KEY, 0.6f)
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[OPEN_TEMPERATURE_KEY] = value
+        }
 
-    val sparkTemperature: Float get() = AppInfo.runtimeProps.getParam(SPARK_TEMPERATURE_KEY, 0.3f)
+    var openaiModel: String = AppInfo.runtimeProps.getParam(OPEN_MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[OPEN_MODEL_KEY] = value
+        }
 
-    val sparkTranslationSourceLanguage: String get() = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY, SparkLanguageType.EN_US.name)
+    var sparkAppId: String = AppInfo.runtimeProps.getParam(SPARK_APP_ID_KEY, "").decrypt()
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_APP_ID_KEY] = value.encrypt()
+        }
 
-    val sparkTranslationTargetLanguage: String get() = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_TARGET_LANGUAGE_KEY, SparkLanguageType.ZH_CN.name)
+    var sparkApiSecret: String = AppInfo.runtimeProps.getParam(SPARK_API_SECRET_KEY, "").decrypt()
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_API_SECRET_KEY] = value.encrypt()
+        }
+
+    var sparkApiKey: String = AppInfo.runtimeProps.getParam(SPARK_API_KEY, "").decrypt()
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_API_KEY] = value.encrypt()
+        }
+
+
+    var sparkTemperature: Float = AppInfo.runtimeProps.getParam(SPARK_TEMPERATURE_KEY, 0.5f)
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_TEMPERATURE_KEY] = value
+        }
+
+    var sparkTranslationSourceLanguage: String = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY, SparkLanguageType.EN_US.name)
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY] = value
+        }
+
+    var sparkTranslationTargetLanguage: String = AppInfo.runtimeProps.getParam(SPARK_TRANSLATION_TARGET_LANGUAGE_KEY, SparkLanguageType.ZH_CN.name)
+        set(value) {
+            field = value
+            AppInfo.runtimeProps.paramMap[SPARK_TRANSLATION_TARGET_LANGUAGE_KEY] = value
+        }
 }

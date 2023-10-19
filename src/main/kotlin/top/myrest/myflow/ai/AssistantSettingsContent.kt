@@ -72,7 +72,7 @@ internal class AssistantSettingsContent : SettingsContent {
                     checked = currentIsDefault,
                     update = {
                         currentIsDefault = it
-                        AppInfo.runtimeProps.paramMap[Constants.PROVIDER_KEY] = if (it) provider else ""
+                        Constants.provider = if (it) provider else ""
                     },
                 )
                 when (provider) {
@@ -97,7 +97,7 @@ internal class AssistantSettingsContent : SettingsContent {
             },
             update = {
                 temperature = it
-                AppInfo.runtimeProps.paramMap[Constants.SPARK_TEMPERATURE_KEY] = it
+                Constants.sparkTemperature = it
             },
         )
     }
@@ -112,9 +112,7 @@ internal class AssistantSettingsContent : SettingsContent {
                 labelWidth = labelWidth,
                 value = Constants.openaiApiKey,
                 placeholder = LanguageBundle.getBy(Constants.PLUGIN_ID, "input-openai-api-key"),
-                update = {
-                    AppInfo.runtimeProps.paramMap[Constants.OPEN_API_KEY] = it
-                },
+                update = { Constants.openaiApiKey = it },
             )
         }
 
@@ -127,7 +125,7 @@ internal class AssistantSettingsContent : SettingsContent {
             valueMapper = { it },
             onMenuClick = {
                 model = it
-                AppInfo.runtimeProps.paramMap[Constants.OPEN_MODEL_KEY] = it
+                Constants.openaiModel = it
             },
         )
 
@@ -142,7 +140,7 @@ internal class AssistantSettingsContent : SettingsContent {
             },
             update = {
                 temperature = it
-                AppInfo.runtimeProps.paramMap[Constants.OPEN_TEMPERATURE_KEY] = it
+                Constants.openaiTemperature = it
             },
         )
     }

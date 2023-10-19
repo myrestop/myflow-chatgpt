@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.BaseDigestActionHandler
 import top.myrest.myflow.action.basicCopyResult
@@ -54,7 +53,7 @@ internal class TranslateSettingsContent : SettingsContent {
                     valueMapper = { it.type.localeName },
                     onMenuClick = {
                         source = it
-                        AppInfo.runtimeProps.paramMap[Constants.SPARK_TRANSLATION_SOURCE_LANGUAGE_KEY] = it.name
+                        Constants.sparkTranslationSourceLanguage = it.name
                     },
                 )
 
@@ -67,7 +66,7 @@ internal class TranslateSettingsContent : SettingsContent {
                     valueMapper = { it.type.localeName },
                     onMenuClick = {
                         target = it
-                        AppInfo.runtimeProps.paramMap[Constants.SPARK_TRANSLATION_TARGET_LANGUAGE_KEY] = it.name
+                        Constants.sparkTranslationTargetLanguage = it.name
                     },
                 )
 
@@ -87,9 +86,7 @@ internal fun SparkCommonSettings() {
             labelWidth = labelWidth,
             value = Constants.sparkAppId,
             placeholder = "app id",
-            update = {
-                AppInfo.runtimeProps.paramMap[Constants.SPARK_APP_ID_KEY] = it
-            },
+            update = { Constants.sparkAppId = it },
         )
     }
     SettingItemRow {
@@ -98,9 +95,7 @@ internal fun SparkCommonSettings() {
             labelWidth = labelWidth,
             value = Constants.sparkApiSecret,
             placeholder = "app secret",
-            update = {
-                AppInfo.runtimeProps.paramMap[Constants.SPARK_API_SECRET_KEY] = it
-            },
+            update = { Constants.sparkApiSecret = it },
         )
     }
     SettingItemRow {
@@ -109,9 +104,7 @@ internal fun SparkCommonSettings() {
             labelWidth = labelWidth,
             value = Constants.sparkApiKey,
             placeholder = "app id",
-            update = {
-                AppInfo.runtimeProps.paramMap[Constants.SPARK_API_KEY] = it
-            },
+            update = { Constants.sparkApiKey = it },
         )
     }
 }

@@ -131,7 +131,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
                         actionWindowBehavior = ActionWindowBehavior.EMPTY_LIST,
                     ) {
                         if (it is String && it.startsWith("sk-")) {
-                            AppInfo.runtimeProps.paramMap[Constants.OPEN_API_KEY] = it
+                            Constants.openaiApiKey = it
                         }
                     },
                 )

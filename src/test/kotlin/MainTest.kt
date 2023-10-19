@@ -1,7 +1,7 @@
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.Actions
+import top.myrest.myflow.ai.AssistantSettingsContent
 import top.myrest.myflow.ai.Constants
-import top.myrest.myflow.ai.spark.TranslateSettingsContent
 import top.myrest.myflow.baseimpl.App
 import top.myrest.myflow.baseimpl.FlowApp
 import top.myrest.myflow.baseimpl.Replacement
@@ -28,7 +28,7 @@ fun main() {
                     key = Constants.PLUGIN_ID,
                     name = name,
                     logo = "./logos/robot.png",
-                    content = TranslateSettingsContent(),
+                    content = AssistantSettingsContent(),
                 )
             )
             return list
