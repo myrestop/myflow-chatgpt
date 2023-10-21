@@ -39,11 +39,17 @@ import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.component.SettingsContent
 import top.myrest.myflow.component.logoSize
 import top.myrest.myflow.constant.AppConsts
+import top.myrest.myflow.db.MyDb
+import top.myrest.myflow.util.javaClassName
 import top.myrest.myflow.util.singleList
 
 class AssistantActionHandler : ActionFocusedKeywordHandler() {
 
     private val ref = AtomicReference<Pair<ChatHistoryDoc, StreamResultListener>>(null)
+
+    init {
+        MyDb.repos[ChatHistoryRepo.javaClassName] = ChatHistoryRepo
+    }
 
     override fun getCustomizeSettingContent(): SettingsContent {
         return AssistantSettingsContent()
