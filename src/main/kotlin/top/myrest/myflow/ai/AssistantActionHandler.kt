@@ -95,7 +95,7 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                 content = {
                     var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
                     var finished by remember { mutableStateOf(false) }
-                    ref.get().second.updateText { str, b ->
+                    ref.get()?.second?.updateText { str, b ->
                         text = str
                         finished = false
                         if (b) {
