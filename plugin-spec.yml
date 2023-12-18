@@ -10,7 +10,7 @@ compatible-version:
   until-build: 2147483647
 owner:
   name: myrest
-  email: myflow@myrest.top
+  email: mrpan@myrest.top
   homepage: https://myrest.top/myflow
 categories:
   - PRODUCTIVITY
