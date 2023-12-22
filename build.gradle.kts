@@ -21,14 +21,20 @@ repositories {
 
 val myflowVersion = "1.0.0"
 val okhttpVersion = "4.9.0"
+val hutoolVersion = "5.8.19"
 
 dependencies {
-    implementation("com.unfbx:SparkDesk-Java:1.0.0")
+    implementation("com.unfbx:SparkDesk-Java:1.0.0") {
+        exclude(group = "cn.hutool", module = "hutool-all")
+        exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")
+        exclude(group = "com.squareup.okhttp3", module = "logging-interceptor")
+    }
     implementation("com.unfbx:chatgpt-java:1.1.0") {
         exclude(group = "cn.hutool", module = "hutool-all")
         exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")
         exclude(group = "com.squareup.okhttp3", module = "logging-interceptor")
     }
+    implementation("cn.hutool:hutool-json:$hutoolVersion")
     implementation("com.squareup.okhttp3:okhttp-sse:$okhttpVersion")
     implementation("com.squareup.okhttp3:logging-interceptor:$okhttpVersion")
     compileOnly(compose.desktop.currentOs)
@@ -42,7 +48,15 @@ tasks.withType<KotlinCompile> {
 
 tasks.jar {
     archiveFileName.set(entry)
-    val excludeJars = setOf("annotations-24.0.1.jar", "slf4j-api-2.0.6.jar", "kotlin-stdlib-1.8.20.jar", "kotlin-stdlib-common-1.8.20.jar", "kotlin-stdlib-jdk8-1.8.20.jar", "kotlin-stdlib-jdk7-1.8.20.jar")
+    val excludeJars = setOf(
+        "annotations-24.0.1.jar",
+        "slf4j-api-2.0.6.jar",
+        "kotlin-stdlib-1.8.20.jar",
+        "kotlin-stdlib-common-1.8.20.jar",
+        "kotlin-stdlib-jdk8-1.8.20.jar",
+        "kotlin-stdlib-jdk7-1.8.20.jar",
+        "hutool-core-$hutoolVersion.jar",
+    )
     val exists = mutableSetOf<String>()
     val files = mutableListOf<Any>()
     configurations.runtimeClasspath.get().allDependencies.forEach { dependency ->
@@ -67,6 +81,7 @@ tasks.jar {
         "changelog.txt",
         "AUTHORS",
         ".gitkeep",
+        "META-INF/INDEX.LIST",
     )
 }
 
