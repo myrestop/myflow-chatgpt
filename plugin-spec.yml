@@ -18,6 +18,7 @@ platforms:
   - WINDOWS
   - MACOS
   - LINUX
+cycle-listener: top.myrest.myflow.ai.AssistantCycleListener
 translator:
   name-bundle-id: spark-translate
   service: top.myrest.myflow.ai.spark.SparkTranslator

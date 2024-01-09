@@ -62,7 +62,7 @@ internal class AssistantSettingsContent : SettingsContent {
                                 text = pair.second,
                                 fontSize = MaterialTheme.typography.subtitle1.fontSize,
                                 color = MaterialTheme.colors.onSecondary,
-                                modifier = Modifier.padding(end = 12.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp),
                             )
                         }
                     }

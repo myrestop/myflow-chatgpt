@@ -21,7 +21,7 @@ repositories {
 
 val myflowVersion = "1.0.0"
 val okhttpVersion = "4.9.0"
-val hutoolVersion = "5.8.19"
+val hutoolVersion = "5.8.24"
 
 dependencies {
     implementation("com.unfbx:SparkDesk-Java:1.0.0") {

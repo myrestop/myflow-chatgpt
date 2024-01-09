@@ -102,7 +102,7 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
         val list = if (keyword.isBlank()) {
             getAll().sortedByDescending { it.id }
         } else {
-            val kw = SearchingSyntax.normalizeKeyword(keyword, fuzzyStart = true, fuzzyEnd = true)
+            val kw = SearchingSyntax.fuzzyKeyword(keyword, fuzzyStart = true, fuzzyEnd = true)
             val sessions = getBy(ObjectFilters.text("content", kw), idDescOption).distinctBy { it.session }.map { it.session }
             getBy(ObjectFilters.`in`("session", *sessions.toTypedArray()), idDescOption)
         }
