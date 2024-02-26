@@ -103,7 +103,7 @@ internal fun SparkCommonSettings() {
             label = "API Key",
             labelWidth = labelWidth,
             value = Constants.sparkApiKey,
-            placeholder = "app id",
+            placeholder = "app key",
             update = { Constants.sparkApiKey = it },
         )
     }
