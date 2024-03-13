@@ -3,17 +3,18 @@ name: Ai Assistant
 names:
   ZH_CN: 智能助手
 entry: ./myflow-chatgpt.jar
-version: 1.0.0
+version: 1.0.1
 logo: ./logos/robot.png
 compatible-version:
-  since-build: 0
-  until-build: 2147483647
+  since-build: 1
+  until-build: 362
 owner:
   name: myrest
   email: mrpan@myrest.top
   homepage: https://myrest.top/myflow
 categories:
   - PRODUCTIVITY
+  - LANGUAGE
 platforms:
   - WINDOWS
   - MACOS

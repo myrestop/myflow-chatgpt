@@ -4,12 +4,12 @@ import java.util.zip.ZipOutputStream
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.20"
-    id("org.jetbrains.compose") version "1.5.1"
+    kotlin("jvm") version "1.9.22"
+    id("org.jetbrains.compose") version "1.5.12"
 }
 
 group = "top.myrest"
-version = "1.0.0"
+version = "1.0.1"
 val entry = "$name.jar"
 
 repositories {
@@ -19,10 +19,12 @@ repositories {
     google()
 }
 
-val myflowVersion = "1.0.0"
+val myflowVersion = "1.0.6"
 val okhttpVersion = "4.9.0"
 val hutoolVersion = "5.8.24"
 
+var myflowDependency: Dependency? = null
+var jetbrainsComposeDependency: Dependency? = null
 dependencies {
     implementation("com.unfbx:SparkDesk-Java:1.0.0") {
         exclude(group = "cn.hutool", module = "hutool-all")
@@ -37,8 +39,8 @@ dependencies {
     implementation("cn.hutool:hutool-json:$hutoolVersion")
     implementation("com.squareup.okhttp3:okhttp-sse:$okhttpVersion")
     implementation("com.squareup.okhttp3:logging-interceptor:$okhttpVersion")
-    compileOnly(compose.desktop.currentOs)
-    compileOnly("top.myrest:myflow-kit:$myflowVersion")
+    jetbrainsComposeDependency = implementation(compose.desktop.currentOs)
+    myflowDependency = implementation("top.myrest:myflow-kit:$myflowVersion")
     testImplementation("top.myrest:myflow-baseimpl:$myflowVersion")
 }
 
@@ -59,7 +61,12 @@ tasks.jar {
     )
     val exists = mutableSetOf<String>()
     val files = mutableListOf<Any>()
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     configurations.runtimeClasspath.get().allDependencies.forEach { dependency ->
+        if (dependency == myflowDependency || dependency == jetbrainsComposeDependency) {
+            return@forEach
+        }
+        println(dependency)
         configurations.runtimeClasspath.get().files(dependency).forEach { file ->
             if (exists.add(file.name) && !excludeJars.contains(file.name)) {
                 println(file.name)
@@ -68,21 +75,6 @@ tasks.jar {
         }
     }
     from(files)
-
-    exclude(
-        "module-info.class",
-        "META-INF/NOTICE",
-        "META-INF/LICENSE",
-        "META-INF/versions/9/module-info.class",
-        "release-timestamp.txt",
-        "README.md",
-        "LICENSE",
-        "latestchanges.html",
-        "changelog.txt",
-        "AUTHORS",
-        ".gitkeep",
-        "META-INF/INDEX.LIST",
-    )
 }
 
 tasks.build {
