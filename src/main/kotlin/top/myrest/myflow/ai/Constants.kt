@@ -1,11 +1,14 @@
 package top.myrest.myflow.ai
 
-import com.unfbx.chatgpt.entity.chat.ChatCompletion
+import cn.hutool.core.util.StrUtil
+import com.unfbx.chatgpt.entity.chat.BaseChatCompletion.Model
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.ai.spark.SparkLanguageType
 import top.myrest.myflow.component.Composes
 
 internal object Constants {
+
+    const val OPENAI_API_HOST = "https://api.openai.com/"
 
     const val PLUGIN_ID = "top.myrest.myflow.ai"
 
@@ -20,6 +23,8 @@ internal object Constants {
     const val OPENAI_PROVIDER = "OpenAI"
 
     const val SPARK_PROVIDER = "Spark"
+
+    private const val OPEN_API_HOST_KEY = "$PLUGIN_ID.openai.ApiHost"
 
     private const val PROVIDER_KEY = "$PLUGIN_ID.Provider"
 
@@ -47,6 +52,12 @@ internal object Constants {
             AppInfo.runtimeProps.paramMap[PROVIDER_KEY] = value
         }
 
+    var openaiApiHost: String = AppInfo.runtimeProps.getParam(OPEN_API_HOST_KEY, OPENAI_API_HOST)
+        set(value) {
+            field = StrUtil.addSuffixIfNot(value, "/")
+            AppInfo.runtimeProps.paramMap[OPEN_API_HOST_KEY] = field
+        }
+
     var openaiApiKey: String = AppInfo.runtimeProps.getParam(OPEN_API_KEY, "").decrypt()
         set(value) {
             field = value
@@ -59,7 +70,7 @@ internal object Constants {
             AppInfo.runtimeProps.paramMap[OPEN_TEMPERATURE_KEY] = value
         }
 
-    var openaiModel: String = AppInfo.runtimeProps.getParam(OPEN_MODEL_KEY, ChatCompletion.Model.GPT_3_5_TURBO.getName())
+    var openaiModel: String = AppInfo.runtimeProps.getParam(OPEN_MODEL_KEY, Model.GPT_3_5_TURBO.getName())
         set(value) {
             field = value
             AppInfo.runtimeProps.paramMap[OPEN_MODEL_KEY] = value

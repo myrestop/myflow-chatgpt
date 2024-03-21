@@ -31,7 +31,7 @@ dependencies {
         exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")
         exclude(group = "com.squareup.okhttp3", module = "logging-interceptor")
     }
-    implementation("com.unfbx:chatgpt-java:1.1.0") {
+    implementation("com.unfbx:chatgpt-java:1.1.5") {
         exclude(group = "cn.hutool", module = "hutool-all")
         exclude(group = "com.squareup.okhttp3", module = "okhttp-sse")
         exclude(group = "com.squareup.okhttp3", module = "logging-interceptor")

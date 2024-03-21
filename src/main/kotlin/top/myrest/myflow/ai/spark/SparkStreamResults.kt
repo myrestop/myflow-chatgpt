@@ -29,7 +29,19 @@ import top.myrest.myflow.util.Jackson.toJsonString
 
 internal object SparkStreamResults {
 
-    val client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WSS_V2_1).appid(Constants.sparkAppId).apiKey(Constants.sparkApiKey).apiSecret(Constants.sparkApiSecret).build()
+    private var _client: SparkDeskClient? = null
+
+    val client: SparkDeskClient
+        @Synchronized get() {
+            val appId = Constants.sparkAppId
+            val apiKey = Constants.sparkApiKey
+            val apiSecret = Constants.sparkApiSecret
+            val innerClient = _client
+            if (innerClient == null || innerClient.appid != appId || innerClient.apiKey != apiKey || innerClient.apiSecret != apiSecret) {
+                _client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WSS_V2_1).appid(appId).apiKey(apiKey).apiSecret(apiSecret).build()
+            }
+            return _client!!
+        }
 
     fun getStreamChatResult(session: AssistantFocusedSession, action: String): ActionResult {
         val texts = mutableListOf<Text>()

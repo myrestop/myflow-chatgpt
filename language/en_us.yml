@@ -8,3 +8,4 @@ set-as-default: Set As Default AI
 source-language: Source Language
 target-language: Target Language
 spark-translate: Spark Translate
+openai-api-host: API Host

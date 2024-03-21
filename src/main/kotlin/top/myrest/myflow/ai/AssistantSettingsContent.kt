@@ -18,7 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.unfbx.chatgpt.entity.chat.ChatCompletion
+import com.unfbx.chatgpt.entity.chat.BaseChatCompletion
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.ai.spark.SparkCommonSettings
 import top.myrest.myflow.component.FuncPageScope
@@ -108,6 +108,15 @@ internal class AssistantSettingsContent : SettingsContent {
         val labelWidth = 120
         SettingItemRow {
             SettingInputText(
+                label = LanguageBundle.getBy(Constants.PLUGIN_ID, "openai-api-host"),
+                labelWidth = labelWidth,
+                value = Constants.openaiApiHost,
+                placeholder = Constants.OPENAI_API_HOST,
+                update = { Constants.openaiApiHost = it },
+            )
+        }
+        SettingItemRow {
+            SettingInputText(
                 label = "API Key",
                 labelWidth = labelWidth,
                 value = Constants.openaiApiKey,
@@ -121,7 +130,7 @@ internal class AssistantSettingsContent : SettingsContent {
             label = "ChatGPT" + AppInfo.currLanguageBundle.wordSep + LanguageBundle.getBy(Constants.PLUGIN_ID, "model"),
             labelWidth = labelWidth,
             value = model,
-            menus = ChatCompletion.Model.values().map { it.getName() },
+            menus = BaseChatCompletion.Model.entries.map { it.getName() },
             valueMapper = { it },
             onMenuClick = {
                 model = it

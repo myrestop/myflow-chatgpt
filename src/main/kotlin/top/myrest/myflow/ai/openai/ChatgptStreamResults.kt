@@ -7,6 +7,7 @@ import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.io.FileUtil
 import com.unfbx.chatgpt.OpenAiClient
 import com.unfbx.chatgpt.OpenAiStreamClient
+import com.unfbx.chatgpt.entity.chat.BaseMessage.Role
 import com.unfbx.chatgpt.entity.chat.ChatCompletion
 import com.unfbx.chatgpt.entity.chat.ChatCompletionResponse
 import com.unfbx.chatgpt.entity.chat.Message
@@ -43,9 +44,31 @@ internal object ChatgptStreamResults {
 
     private val log = LoggerFactory.getLogger(ChatgptStreamResults::class.java)
 
-    private val client = OpenAiClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
+    private var _client: OpenAiClient? = null
 
-    private val streamClient = OpenAiStreamClient.builder().apiKey(listOf(Constants.openaiApiKey)).build()
+    private var _streamClient: OpenAiStreamClient? = null
+
+    private val client: OpenAiClient
+        @Synchronized get() {
+            val apiHost = Constants.openaiApiHost.ifBlank { Constants.OPENAI_API_HOST }
+            val apiKey = Constants.openaiApiKey
+            val innerClient = _client
+            if (innerClient == null || innerClient.apiHost != apiHost || innerClient.apiKey.firstOrNull() != apiKey) {
+                _client = OpenAiClient.builder().apiHost(apiHost).apiKey(listOf(apiKey)).build()
+            }
+            return _client!!
+        }
+
+    private val streamClient: OpenAiStreamClient
+        @Synchronized get() {
+            val apiHost = Constants.openaiApiHost.ifBlank { Constants.OPENAI_API_HOST }
+            val apiKey = Constants.openaiApiKey
+            val innerClient = _streamClient
+            if (innerClient == null || innerClient.apiHost != apiHost || innerClient.apiKey.firstOrNull() != apiKey) {
+                _streamClient = OpenAiStreamClient.builder().apiHost(apiHost).apiKey(listOf(apiKey)).build()
+            }
+            return _streamClient!!
+        }
 
     fun getVariationImageResult(session: AssistantFocusedSession, file: File): List<ActionResult> {
         return getImageResult(
@@ -92,16 +115,15 @@ internal object ChatgptStreamResults {
         )
     }
 
-    @Suppress("CAST_NEVER_SUCCEEDS")
     private fun getImageResult(session: AssistantFocusedSession, action: String, getImages: (AssistantFocusedSession, String) -> List<Item>): List<ActionResult> {
         AsyncTasks.execute {
             val userDoc = action.asUserChatgptTextDoc(session)
             val imageDoc = try {
                 val value = getImages(session, action).map { it.b64Json }.toJsonString()
-                ChatHistoryDoc(userDoc.session, Message.Role.ASSISTANT.getName(), "", value, ContentType.IMAGES)
+                ChatHistoryDoc(userDoc.session, Role.ASSISTANT.getName(), "", value, ContentType.IMAGES)
             } catch (e: Exception) {
                 log.error("error", e)
-                ChatHistoryDoc(userDoc.session, Message.Role.ASSISTANT.getName(), ExceptionUtil.stacktraceToString(e, Int.MAX_VALUE))
+                ChatHistoryDoc(userDoc.session, Role.ASSISTANT.getName(), ExceptionUtil.stacktraceToString(e, Int.MAX_VALUE))
             }
             val list = mutableListOf(userDoc.toResult(), imageDoc.toResult())
             list.addAll(session.results.get())
@@ -147,7 +169,7 @@ internal object ChatgptStreamResults {
         return listener
     }
 
-    fun String.asUserChatgptTextDoc(session: AssistantFocusedSession?) = ChatHistoryDoc(resolveSession(session), Message.Role.USER.getName(), this)
+    fun String.asUserChatgptTextDoc(session: AssistantFocusedSession?) = ChatHistoryDoc(resolveSession(session), Role.USER.getName(), this)
 
     fun ChatHistoryDoc.toMessage(): Message {
         return Message.builder().role(role).content(content).build()
@@ -167,7 +189,7 @@ internal object ChatgptStreamResults {
 
         private var updater: ((String, Boolean) -> Unit)? = null
 
-        override fun getRole(): String = Message.Role.ASSISTANT.getName()
+        override fun getRole(): String = Role.ASSISTANT.getName()
 
         override fun getProvider(): String = Constants.OPENAI_PROVIDER
 

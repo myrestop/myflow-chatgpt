@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import cn.hutool.core.date.DateUtil
 import cn.hutool.core.img.ImgUtil
 import cn.hutool.core.util.RandomUtil
-import com.unfbx.chatgpt.entity.chat.Message
+import com.unfbx.chatgpt.entity.chat.BaseMessage
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
@@ -83,7 +83,7 @@ internal fun ChatHistoryDoc.toResult(): ActionResult = customContentResult(
     result = this,
     contentHeight = -1,
     content = {
-        val isUser = role == Message.Role.USER.getName()
+        val isUser = role == BaseMessage.Role.USER.getName()
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             var showTime by remember { mutableStateOf(false) }
             Image(

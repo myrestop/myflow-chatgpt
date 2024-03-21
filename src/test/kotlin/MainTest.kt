@@ -1,3 +1,4 @@
+import com.fasterxml.jackson.databind.DeserializationFeature
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.Actions
 import top.myrest.myflow.ai.AssistantSettingsContent
@@ -14,8 +15,10 @@ import top.myrest.myflow.component.Composes
 import top.myrest.myflow.dev.DevProps
 import top.myrest.myflow.event.AppStartedEvent
 import top.myrest.myflow.event.EventBus.addSimpleListener
+import top.myrest.myflow.util.Jackson
 
 fun main() {
+    Jackson.yamlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     val name = "Assistant"
     enableDevEnv()
     DevProps.disableNativeListener = false

@@ -5,7 +5,7 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.SwingUtilities
 import cn.hutool.core.io.FileUtil
-import com.unfbx.chatgpt.entity.chat.ChatCompletion
+import com.unfbx.chatgpt.entity.chat.BaseChatCompletion.Model
 import org.slf4j.LoggerFactory
 import top.myrest.myflow.AppInfo
 import top.myrest.myflow.action.ActionFocusedSession
@@ -139,7 +139,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
             return
         }
         val modelList = mutableListOf(Constants.openaiModel)
-        modelList.addAll(ChatCompletion.Model.values().map { it.getName() })
+        modelList.addAll(Model.entries.map { it.getName() })
         list.add(
             defaultResult.copy(
                 logo = Constants.chatgptLogo,
