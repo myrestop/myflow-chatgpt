@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "top.myrest"
-version = "1.0.1"
+version = "1.0.2"
 val entry = "$name.jar"
 
 repositories {

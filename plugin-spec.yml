@@ -3,7 +3,7 @@ name: Ai Assistant
 names:
   ZH_CN: 智能助手
 entry: ./myflow-chatgpt.jar
-version: 1.0.1
+version: 1.0.2
 logo: ./logos/robot.png
 compatible-version:
   since-build: 1
