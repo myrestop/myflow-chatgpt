@@ -42,7 +42,6 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
         log.info("enter ai assistant focused mode: {}", pin.getPinId())
         SwingUtilities.invokeLater {
             chatHistoryWindow?.attach()
-            Composes.actionWindowProvider?.setAction(pin, "", false)
         }
     }
 
@@ -84,6 +83,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
         )
 
         val list = mutableListOf<ActionResult>()
+        list.addAll(getHistories(action, 10))
         addSuggestFileResults(action, list)
 
         val provider = Constants.provider

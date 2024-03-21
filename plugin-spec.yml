@@ -3,11 +3,11 @@ name: Ai Assistant
 names:
   ZH_CN: 智能助手
 entry: ./myflow-chatgpt.jar
-version: 1.0.2
+version: 1.0.3
 logo: ./logos/robot.png
 compatible-version:
-  since-build: 1
-  until-build: 362
+  since-build: 456
+  until-build: 456
 owner:
   name: myrest
   email: mrpan@myrest.top

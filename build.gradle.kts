@@ -9,17 +9,17 @@ plugins {
 }
 
 group = "top.myrest"
-version = "1.0.2"
+version = "1.0.3"
 val entry = "$name.jar"
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     google()
 }
 
-val myflowVersion = "1.0.6"
+val myflowVersion = "1.0.8"
 val okhttpVersion = "4.9.0"
 val hutoolVersion = "5.8.24"
 
