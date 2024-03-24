@@ -49,7 +49,7 @@ internal class TranslateSettingsContent : SettingsContent {
                     label = LanguageBundle.getBy(Constants.PLUGIN_ID, "source-language"),
                     labelWidth = 120,
                     value = source.type.localeName,
-                    menus = SparkLanguageType.values().toList(),
+                    menus = SparkLanguageType.entries,
                     valueMapper = { it.type.localeName },
                     onMenuClick = {
                         source = it

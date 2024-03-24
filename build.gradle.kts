@@ -19,7 +19,7 @@ repositories {
     google()
 }
 
-val myflowVersion = "1.0.8"
+val myflowVersion = "1.0.9"
 val okhttpVersion = "4.9.0"
 val hutoolVersion = "5.8.24"
 

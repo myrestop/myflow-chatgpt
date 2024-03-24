@@ -54,15 +54,11 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
     }
 
     override fun queryAction(param: ActionParam): List<ActionResult> {
-        var action = param.originAction.trim()
-        if (param.keyword.isNotBlank() && !param.isAnyKeyword()) {
-            action = action.removePrefix(param.keyword).removeSuffix(param.keyword)
-        }
-        if (action.isBlank() || action.last().isWhitespace()) {
+        val action = param.resolvedAction
+        if (action.isBlank()) {
             return emptyList()
         }
 
-        action = action.trim()
         val pair = when (Constants.provider) {
             Constants.OPENAI_PROVIDER -> {
                 val userDoc = action.asUserChatgptTextDoc(null)

@@ -6,8 +6,8 @@ entry: ./myflow-chatgpt.jar
 version: 1.0.3
 logo: ./logos/robot.png
 compatible-version:
-  since-build: 456
-  until-build: 456
+  since-build: 477
+  until-build: 477
 owner:
   name: myrest
   email: mrpan@myrest.top
