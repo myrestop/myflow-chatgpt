@@ -1,5 +1,6 @@
 package top.myrest.myflow.ai
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,10 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
 
     private val ref = AtomicReference<Pair<ChatHistoryDoc, StreamResultListener>>(null)
 
+    private val contentRef = AtomicReference("")
+
+    private val finishedRef = AtomicBoolean(false)
+
     override fun getCustomizeSettingContent(): SettingsContent {
         return AssistantSettingsContent()
     }
@@ -59,41 +64,29 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
             return emptyList()
         }
 
-        val pair = when (Constants.provider) {
-            Constants.OPENAI_PROVIDER -> {
-                val userDoc = action.asUserChatgptTextDoc(null)
-                val message = userDoc.toMessage()
-                userDoc to ChatgptStreamResults.getListener(message.singleList(), Constants.openaiModel)
-            }
-
-            Constants.SPARK_PROVIDER -> {
-                val userDoc = action.asUserSparkTextDoc(null)
-                val text = userDoc.toText()
-                userDoc to SparkStreamResults.getListener(text.singleList())
-            }
-
-            else -> return emptyList()
-        }
-
-        ref.get()?.second?.close()
-        ref.set(pair)
-
+        closeConnection()
+        contentRef.set(AppInfo.currLanguageBundle.shared.connecting)
+        finishedRef.set(false)
         return listOf(
             customContentResult(
                 actionId = "",
                 contentHeight = -1,
                 content = {
-                    var text by remember { mutableStateOf(AppInfo.currLanguageBundle.shared.connecting) }
-                    var finished by remember { mutableStateOf(false) }
-                    ref.get()?.second?.updateText { str, b ->
-                        text = str
-                        finished = false
-                        if (b) {
-                            val userDoc = ref.get().first
-                            val listener = ref.get().second
-                            val chatDoc = ChatHistoryDoc(userDoc.session, listener.getRole(), str, listener.getProvider())
-                            ChatHistoryRepo.addChat(userDoc, chatDoc)
-                            finished = true
+                    var text by remember { mutableStateOf(contentRef.get()) }
+                    var finished by remember { mutableStateOf(finishedRef.get()) }
+                    if (it && !finished && ref.get() == null) {
+                        ref.set(connectToAi(action))
+                        ref.get()?.second?.updateText { str, b ->
+                            text = str
+                            contentRef.set(str)
+                            if (b) {
+                                val userDoc = ref.get().first
+                                val listener = ref.get().second
+                                val chatDoc = ChatHistoryDoc(userDoc.session, listener.getRole(), str, listener.getProvider())
+                                ChatHistoryRepo.addChat(userDoc, chatDoc)
+                                finished = true
+                                finishedRef.set(true)
+                            }
                         }
                     }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -105,8 +98,7 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                         Spacer(modifier = Modifier.width(16.dp))
                         DisposableEffect(Unit) {
                             onDispose {
-                                ref.get()?.second?.close()
-                                ref.set(null)
+                                closeConnection()
                             }
                         }
                         if (finished) {
@@ -135,5 +127,28 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                 },
             ),
         )
+    }
+
+    private fun closeConnection() {
+        ref.get()?.second?.close()
+        ref.set(null)
+    }
+
+    private fun connectToAi(action: String): Pair<ChatHistoryDoc, StreamResultListener>? {
+        return when (Constants.provider) {
+            Constants.OPENAI_PROVIDER -> {
+                val userDoc = action.asUserChatgptTextDoc(null)
+                val message = userDoc.toMessage()
+                userDoc to ChatgptStreamResults.getListener(message.singleList(), Constants.openaiModel)
+            }
+
+            Constants.SPARK_PROVIDER -> {
+                val userDoc = action.asUserSparkTextDoc(null)
+                val text = userDoc.toText()
+                userDoc to SparkStreamResults.getListener(text.singleList())
+            }
+
+            else -> null
+        }
     }
 }

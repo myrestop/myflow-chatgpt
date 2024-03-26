@@ -19,9 +19,9 @@ platforms:
   - WINDOWS
   - MACOS
   - LINUX
-translator:
-  name-bundle-id: spark-translate
-  service: top.myrest.myflow.ai.spark.SparkTranslator
+translators:
+  - name-bundle-id: spark-translate
+    service: top.myrest.myflow.ai.spark.SparkTranslator
 actions:
   - keywords:
       - '/'
