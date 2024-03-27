@@ -5,6 +5,7 @@ names:
 entry: ./myflow-chatgpt.jar
 version: 1.0.3
 logo: ./logos/robot.png
+source-code: https://github.com/myrestop/myflow-chatgpt
 compatible-version:
   since-build: 477
   until-build: 477
