@@ -6,4 +6,4 @@
 
 申请OpenAI API Key: https://platform.openai.com/account/api-keys
 
-申请星火大模型API Key: https://console.xfyun.cn/services/bm2
+申请星火大模型API Key: https://console.xfyun.cn/services/bm35

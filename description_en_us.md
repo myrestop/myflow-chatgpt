@@ -7,4 +7,4 @@ please note that in this mode, every connection is an independent conversation.
 
 Apply OpenAI API Key: https://platform.openai.com/account/api-keys
 
-Apply Spark Desk API Key: https://console.xfyun.cn/services/bm2
+Apply Spark Desk API Key: https://console.xfyun.cn/services/bm35
