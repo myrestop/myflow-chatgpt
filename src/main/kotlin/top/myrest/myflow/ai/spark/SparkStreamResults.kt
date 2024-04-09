@@ -2,7 +2,6 @@ package top.myrest.myflow.ai.spark
 
 import java.util.concurrent.atomic.AtomicBoolean
 import com.unfbx.sparkdesk.SparkDeskClient
-import com.unfbx.sparkdesk.constant.SparkDesk
 import com.unfbx.sparkdesk.entity.AIChatRequest
 import com.unfbx.sparkdesk.entity.AIChatResponse
 import com.unfbx.sparkdesk.entity.Chat
@@ -38,7 +37,7 @@ internal object SparkStreamResults {
             val apiSecret = Constants.sparkApiSecret
             val innerClient = _client
             if (innerClient == null || innerClient.appid != appId || innerClient.apiKey != apiKey || innerClient.apiSecret != apiSecret) {
-                _client = SparkDeskClient.builder().host(SparkDesk.SPARK_API_HOST_WSS_V2_1).appid(appId).apiKey(apiKey).apiSecret(apiSecret).build()
+                _client = SparkDeskClient.builder().host("https://spark-api.xf-yun.com/v3.5/chat").appid(appId).apiKey(apiKey).apiSecret(apiSecret).build()
             }
             return _client!!
         }

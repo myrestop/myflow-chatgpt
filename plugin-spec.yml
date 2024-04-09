@@ -7,8 +7,8 @@ version: 1.0.3
 logo: ./logos/robot.png
 source-code: https://github.com/myrestop/myflow-chatgpt
 compatible-version:
-  since-build: 477
-  until-build: 477
+  since-build: 661
+  until-build: 661
 owner:
   name: myrest
   email: mrpan@myrest.top
