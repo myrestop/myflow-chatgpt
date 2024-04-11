@@ -28,6 +28,8 @@ import top.myrest.myflow.action.ActionFocusedSession
 import top.myrest.myflow.action.ActionParam
 import top.myrest.myflow.action.ActionResult
 import top.myrest.myflow.action.customContentResult
+import top.myrest.myflow.action.plain
+import top.myrest.myflow.action.singleCallback
 import top.myrest.myflow.ai.openai.ChatgptStreamResults
 import top.myrest.myflow.ai.openai.ChatgptStreamResults.asUserChatgptTextDoc
 import top.myrest.myflow.ai.openai.ChatgptStreamResults.toMessage
@@ -40,6 +42,8 @@ import top.myrest.myflow.component.MyMarkdownText
 import top.myrest.myflow.component.SettingsContent
 import top.myrest.myflow.component.logoSize
 import top.myrest.myflow.constant.AppConsts
+import top.myrest.myflow.enumeration.ActionWindowBehavior
+import top.myrest.myflow.language.LanguageBundle
 import top.myrest.myflow.util.singleList
 
 class AssistantActionHandler : ActionFocusedKeywordHandler() {
@@ -60,6 +64,31 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
 
     override fun queryAction(param: ActionParam): List<ActionResult> {
         val action = param.resolvedAction
+        if (param.isAnyKeyword()) {
+            return listOf(
+                ActionResult(
+                    result = action,
+                    actionId = "ai-assistant",
+                    title = listOf(action.plain),
+                    subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "ai-assistant"),
+                    callbacks = singleCallback(
+                        showNotify = false,
+                        actionWindowBehavior = ActionWindowBehavior.NOTHING,
+                        actionCallback = {
+                            val pin = Composes.actionWindowProvider?.getActiveKeywordPin(false)
+                            if (pin != null) {
+                                Composes.actionWindowProvider?.updateActionResultList(pin, queryAction(it.toString()))
+                            }
+                        },
+                    ),
+                )
+            )
+        }
+
+        return queryAction(action)
+    }
+
+    private fun queryAction(action: String): List<ActionResult> {
         if (action.isBlank()) {
             return emptyList()
         }

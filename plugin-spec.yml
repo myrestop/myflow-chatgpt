@@ -3,7 +3,7 @@ name: Ai Assistant
 names:
   ZH_CN: 智能助手
 entry: ./myflow-chatgpt.jar
-version: 1.0.4
+version: 1.0.5
 logo: ./logos/robot.png
 source-code: https://github.com/myrestop/myflow-chatgpt
 compatible-version:
@@ -25,6 +25,7 @@ translators:
     service: top.myrest.myflow.ai.spark.SparkTranslator
 actions:
   - keywords:
+      - '*'
       - '/'
     logo: ./logos/robot.png
     pin-name: Assistant
