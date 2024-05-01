@@ -78,6 +78,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
             result = action,
             callbacks = singleCallback(
                 showNotify = false,
+                label = AppInfo.currLanguageBundle.shared.send,
                 actionWindowBehavior = ActionWindowBehavior.NOTHING,
             ),
         )
@@ -106,6 +107,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
                 subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "spark-desk"),
                 callbacks = singleCallback(
                     showNotify = false,
+                    label = AppInfo.currLanguageBundle.shared.send,
                     actionWindowBehavior = ActionWindowBehavior.NOTHING,
                     actionCallback = {
                         if (it is String) {
@@ -128,6 +130,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
                     subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "set-openai-api-key"),
                     result = action,
                     callbacks = singleCallback(
+                        label = AppInfo.currLanguageBundle.shared.activate,
                         actionWindowBehavior = ActionWindowBehavior.EMPTY_LIST,
                     ) {
                         if (it is String && it.startsWith("sk-")) {
@@ -247,6 +250,7 @@ internal class AssistantFocusedSession(pin: ActionKeywordPin) : ActionFocusedSes
                 it.mapFile(offset).copy(
                     callbacks = singleCallback(
                         showNotify = false,
+                        label = AppInfo.currLanguageBundle.shared.pick,
                         actionWindowBehavior = ActionWindowBehavior.NOTHING,
                     ) { f ->
                         if (f is File) {

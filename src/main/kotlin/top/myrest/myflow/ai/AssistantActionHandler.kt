@@ -73,6 +73,7 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                     subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "ai-assistant"),
                     callbacks = singleCallback(
                         showNotify = false,
+                        label = AppInfo.currLanguageBundle.shared.send,
                         actionWindowBehavior = ActionWindowBehavior.NOTHING,
                         actionCallback = {
                             val pin = Composes.actionWindowProvider?.getActiveKeywordPin(false)
