@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "top.myrest"
-version = "1.0.5"
+version = "1.0.6"
 val entry = "$name.jar"
 
 repositories {
@@ -19,7 +19,7 @@ repositories {
     google()
 }
 
-val myflowVersion = "1.1.0"
+val myflowVersion = "1.3.0"
 val okhttpVersion = "4.9.0"
 val hutoolVersion = "5.8.24"
 
