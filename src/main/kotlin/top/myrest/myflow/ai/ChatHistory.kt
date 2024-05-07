@@ -42,6 +42,7 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.unfbx.chatgpt.entity.chat.BaseMessage
 import org.dizitart.no2.IndexType
 import org.dizitart.no2.objects.Index
 import org.dizitart.no2.objects.Indices
@@ -107,23 +108,14 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
             getBy(ObjectFilters.`in`("session", *sessions.toTypedArray()), idDescOption)
         }
 
-        var session = ""
-        var result = mutableListOf<ChatHistoryDoc>()
-        val results = mutableListOf<ChatHistoryData>()
+        val sessions = LinkedHashSet<String>()
+        val chats = HashMap<String, ArrayList<ChatHistoryDoc>>()
         list.forEach {
-            if (session != it.session && result.isNotEmpty()) {
-                results.add(ChatHistoryData(result.first(), result))
-                result = mutableListOf()
-            }
-            session = it.session
-            result.add(it)
+            sessions.add(it.session)
+            chats.computeIfAbsent(it.session) { ArrayList() }.add(it)
         }
 
-        if (result.isNotEmpty()) {
-            results.add(ChatHistoryData(result.first(), result))
-        }
-
-        return results
+        return sessions.map { ChatHistoryData(chats[it]!!) }
     }
 
     override fun onSyncFrom(method: DataModifyMethod, doc: ChatHistoryDoc) {
@@ -136,16 +128,19 @@ internal object ChatHistoryRepo : BaseRepo<Int, ChatHistoryDoc>(ChatHistoryDoc::
     }
 }
 
-internal data class ChatHistoryData(val firstUser: ChatHistoryDoc, val list: List<ChatHistoryDoc>) {
+internal data class ChatHistoryData(val list: List<ChatHistoryDoc>) {
+
+    val firstAsk = list.last { it.role == BaseMessage.Role.USER.getName() }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as ChatHistoryData
-        return firstUser == other.firstUser
+        return firstAsk == other.firstAsk
     }
 
     override fun hashCode(): Int {
-        return firstUser.hashCode()
+        return firstAsk.hashCode()
     }
 }
 
@@ -188,8 +183,8 @@ internal class ChatHistoryWindow(private val session: AssistantFocusedSession, p
                     return@method
                 }
 
-                val data = ChatHistoryData(it.first(), it)
-                val idx = list.indexOfFirst { e -> e.firstUser.session == session }
+                val data = ChatHistoryData(it)
+                val idx = list.indexOfFirst { e -> e.firstAsk.session == session }
                 if (idx < 0) {
                     list.add(0, data)
                 } else {
@@ -246,7 +241,7 @@ internal class ChatHistoryWindow(private val session: AssistantFocusedSession, p
                 ) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = item.firstUser.content,
+                            text = item.firstAsk.content,
                             color = MaterialTheme.colors.onPrimary.copy(0.7f),
                             modifier = Modifier.padding(start = 2.dp),
                             overflow = TextOverflow.Ellipsis,
@@ -266,7 +261,7 @@ internal class ChatHistoryWindow(private val session: AssistantFocusedSession, p
                             }.onPointerEvent(eventType = PointerEventType.Exit) {
                                 hovered = false
                             }.onClick {
-                                ChatHistoryRepo.removeBySession(item.firstUser.session)
+                                ChatHistoryRepo.removeBySession(item.firstAsk.session)
                                 list.remove(item)
                             },
                         )

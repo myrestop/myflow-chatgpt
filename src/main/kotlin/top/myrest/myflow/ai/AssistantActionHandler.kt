@@ -27,6 +27,7 @@ import top.myrest.myflow.action.ActionFocusedKeywordHandler
 import top.myrest.myflow.action.ActionFocusedSession
 import top.myrest.myflow.action.ActionParam
 import top.myrest.myflow.action.ActionResult
+import top.myrest.myflow.action.ActionTitles
 import top.myrest.myflow.action.customContentResult
 import top.myrest.myflow.action.plain
 import top.myrest.myflow.action.singleCallback
@@ -69,7 +70,7 @@ class AssistantActionHandler : ActionFocusedKeywordHandler() {
                 ActionResult(
                     result = action,
                     actionId = "ai-assistant",
-                    title = listOf(action.plain),
+                    title = ActionTitles.omitExceed(mutableListOf(action.plain)),
                     subtitle = LanguageBundle.getBy(Constants.PLUGIN_ID, "ai-assistant"),
                     callbacks = singleCallback(
                         showNotify = false,
